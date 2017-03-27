@@ -1,0 +1,61 @@
+Heat map
+
+Existing tools {
+   > https://www.imapbuilder.net/userguide/gmap_v1/visualization/create-heat-map/
+      > Only known area maps.
+      > online only.
+   > http://www.openheatmap.com
+      > Only known area maps.
+      > online only.
+   > http://www.qgis.org/en/site/about/index.html
+      > quite technical
+}
+Requirements {
+   > Bespoke areas
+      > Ease making these
+         > Same tool as to present?
+            > No
+         > From HTML MAPs
+            > See Bradford ward map
+            > https://gist.github.com/myersjustinc/2790494
+   > customisable scale
+      > logarithmic/linear/exp
+      x other
+         x This can allow scales which are misleading
+      ? limits?
+         > percentages
+         > from 0, etc.
+   > Customisable colouring
+      > transparency
+      > multi-step gradient
+   > key generation
+   > Tool can be used offline
+   > If output format is svg then do "proper" grouping to allow
+     post-creation editing.
+}
+Notes {
+   > Set alt text to something useful
+      > Area name
+      > stat
+}
+Language {
+   x python
+      > get to learn python
+   v javascript
+      > can be used online
+      > http://www.petercollingridge.co.uk/data-visualisation/using-javascript-control-svg
+      > get to learn javascript
+}
+
+Tasks
+{
+   v fill modification by name
+   > loading svg
+   > loading csv
+   > svg display/save
+   > form to set preferences
+      > colour
+      > scale
+         > limits
+         > log/linear/exp
+}
