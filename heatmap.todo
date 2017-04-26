@@ -49,10 +49,11 @@ Language {
 
 Tasks {
     v fill modification by name
-    > loading svg
     > loading csv
         > refering to example at jquery-csv/examples/file-handling.html
-            > Which functions do we need to get that working then?
+        ! Finish setRefionVal
+        > TEST
+    > loading svg
     > svg display/save
     > form to set preferences
         > colour
