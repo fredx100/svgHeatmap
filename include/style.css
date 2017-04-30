@@ -12,4 +12,5 @@ div.section {
 input {
     position: absolute;
     left: 10cm;
+    background: lightgrey;
 }

@@ -51,10 +51,9 @@ Tasks {
     v fill modification by name
     > loading csv
         > refering to example at jquery-csv/examples/file-handling.html
-        ! Finish setRefionVal
-        > TEST
+        > TEST and see where it's going wrong.
     > loading svg
-    > svg display/save
+    > svg save
     > form to set preferences
         > colour
         > scale

@@ -1,14 +1,17 @@
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1">
+    <link rel="stylesheet" type="text/css" href="include/style.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="include/jquery.csv.js"></script>
     <script src="include/svg_heatmap.js"></script>
   </head>
   <body onload='init("C")'>
     <div id="inputs" class="section">
       Select SVG image
-      <input type="file" id="SVG file" name="svgfile" style="background:lightgrey"/><br/>
+      <input type="file" id="svgfile"/><br/>
       Select CSV data
-      <input type="file" id="CSV file" name="csvfile"  style="background:lightgrey"/>
+      <input type="file" id="csvfile"/>
     </div>
     <div id="output" class="section">
       <embed id="map" src="test.svg" width=600 height=600/>
