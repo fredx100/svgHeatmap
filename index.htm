@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1">
@@ -6,19 +7,25 @@
     <script src="include/jquery.csv.js"></script>
     <script src="include/svg_heatmap.js"></script>
   </head>
-  <body onload='init("C")'>
+  <body>
     <h1>SVG Heatmap</h1>
-    <p>Version 0.1</p>
+    <p class="outer">Version 0.1</p>
     <div id="inputs" class="section">
-      Select SVG image
-      <input type="file" id="svgfile"/><br/>
-      Select CSV data
-      <input type="file" id="csvfile"/>
+      <table>
+        <tr><td>Select SVG image</td><td><input type="file" id="svgfile"/></td></tr>
+        <tr><td>Select CSV data</td> <td><input type="file" id="csvfile"/></td></tr>
+      </table>
+    </div>
+    <div id="debug" class="section">
+        <p id="svgdoc">svgDoc.</p>
+        <p id="svglistener">Listener.</p>
     </div>
     <div id="output" class="section">
-      <embed id="map" src="test.svg" width=600 height=600/>
+      <object id="svgresult" src="" type="image/svg+xml" width=600 height=600>
+          No SVG file loaded.
+      </object>
     </div>
   </body>
 </html>
 
-</-- vim: set shiftwidth=2  -->
+</-- vim: setlocal shiftwidth=2  -->

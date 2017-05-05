@@ -3,7 +3,10 @@ body {
     font: bold 14pt arial, sans-serif;
     color: grey;
 }
-h1,p {
+p {
+    margin: 0mm
+}
+h1,p.outer {
     margin: 0mm 7mm;
 }
 div.section {
@@ -13,7 +16,5 @@ div.section {
     border-radius: 8px;
 }
 input {
-    position: absolute;
-    left: 10cm;
     background: lightgrey;
 }

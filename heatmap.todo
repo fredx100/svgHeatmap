@@ -50,12 +50,17 @@ Language {
 Tasks {
     v fill modification by name
     > loading csv
-        > refering to example at jquery-csv/examples/file-handling.html
-        > TEST and see where it's going wrong.
-    > loading svg
+        v refering to example at jquery-csv/examples/file-handling.html
+        ! JSLint'ing
+    > Rip out JQuery
+        > It seems unneccessary.
+        > replace csv reader with something non-JQuery
+    v loading svg
     > svg save
     > form to set preferences
         > colour
+            > single colour
+            > a-b colour?
         > scale
             > limits
             > log/linear/exp
