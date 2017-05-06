@@ -137,9 +137,8 @@ function getCsvArray(file) {
   "use strict";
   var reader = new FileReader();
   reader.readAsText(file);
-  reader.onload = function(event){
-    var csv = event.target.result;
-    var csvArray = $.csv.toArrays(csv);
+  reader.onload = function(){
+    var csvArray = readCSV(this.result);
 
     if (checkValidData(csvArray)) {
       csvArrayToObject(csvArray);
@@ -155,7 +154,7 @@ function getCsvArray(file) {
 
 function handleCsvFileSelect(evt) {
   "use strict";
-  var file = evt.target.value; // FileList object
+  var file = evt.target.files[0]; // FileList object
   getCsvArray(file); // read the file contents
 }
 

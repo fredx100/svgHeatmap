@@ -51,10 +51,11 @@ Tasks {
     v fill modification by name
     > loading csv
         v refering to example at jquery-csv/examples/file-handling.html
-        ! JSLint'ing
+        > JSLint'ing
+        > replace csv reader with something non-JQuery
+            ! Debug
     > Rip out JQuery
         > It seems unneccessary.
-        > replace csv reader with something non-JQuery
     v loading svg
     > svg save
     > form to set preferences

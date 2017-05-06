@@ -1,3 +1,0 @@
-[submodule "jquery-csv"]
-	path = include/jquery-csv
-	url = https://github.com/evanplaice/jquery-csv.git
