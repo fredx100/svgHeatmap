@@ -129,17 +129,15 @@ function updateSVGByKey (element) {
 function updateSvg() {
   "use strict";
   if (haveSVG && haveCSV) {
-    csvObj.forEach(updateSVGByKey);
+    Object.keys(csvObj).forEach(updateSVGByKey);
   }
 }
 
-function getCsvArray(file) {
+function getCsvObj(file) {
   "use strict";
   var reader = new FileReader();
-  reader.readAsText(file);
   reader.onload = function(){
     var csvArray = readCSV(this.result);
-
     if (checkValidData(csvArray)) {
       csvArrayToObject(csvArray);
       haveCSV = true;
@@ -150,12 +148,13 @@ function getCsvArray(file) {
     }
   };
   reader.onerror = function(){ alert("Unable to read " + file.fileName); };
+  reader.readAsText(file);
 }
 
 function handleCsvFileSelect(evt) {
   "use strict";
   var file = evt.target.files[0]; // FileList object
-  getCsvArray(file); // read the file contents
+  getCsvObj(file); // read the file contents
 }
 
 function setRegionVal(name) {
