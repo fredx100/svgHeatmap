@@ -57,6 +57,7 @@ Tasks {
     v Rip out JQuery
         > It seems unneccessary.
     v loading svg
+    > Applying csv to svg.
     > svg save
     > form to set preferences
         > colour
