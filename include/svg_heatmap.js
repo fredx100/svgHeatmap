@@ -56,10 +56,21 @@ function registerSVG(evt) {
   telem = document.getElementById("svglistener");
   telem.innerText = "Listening... (" + haveSVG + ")";
   initSvg("C");
-
 }
 
-// Check that a row of the csvData is valid.
+// isNumeric
+//
+// Returns true if n is... numeric.
+// From https://stackoverflow.com/a/1830844/885587
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+// checkRowValid
+//
+// Check that a row of the csvData is valid. A valid row has two fields.
+// The first should be defined and not zero length, while the second
+// should be numeric.
 function checkRowValid(element, index) {
   "use strict";
   // At least two elements per row
@@ -76,7 +87,7 @@ function checkRowValid(element, index) {
     alert("CSV row " + index + " : data must have non-empty 1st column (ID).");
   }
   // Second element numeric
-  if (!$.IsNumeric(element[1])) {
+  if (!isNumeric(element[1])) {
     this.valid = false;
     alert("CSV row " + index + ", (" + element[1] + ") : data must have numeric 2nd column (value).");
   }
@@ -87,11 +98,11 @@ function checkRowValid(element, index) {
 // Checks that the CSV data is applicable and if so converts it into an object.
 function checkValidData(csvArray) {
   "use strict";
-  csvArray.valid = true;
+  var status = {valid:true};
 
-  csvArray.forEach(checkRowValid, csvArray);
+  csvArray.forEach(checkRowValid, status);
 
-  return csvArray.valid;
+  return status.valid;
 }
 
 // Convert an array row to an element
