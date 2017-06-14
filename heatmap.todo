@@ -57,7 +57,10 @@ Tasks {
     v Rip out JQuery
         > It seems unneccessary.
     v loading svg
-    > Applying csv to svg.
+    ! Applying csv to svg.
+        > .style.transparancy doesn't work. Use opacity or fill-opacity?
+          In [0,1].
+        > Adding a "title" element doesn't give tooltip.
     > svg save
     > form to set preferences
         > colour
