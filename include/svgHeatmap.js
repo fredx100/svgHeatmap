@@ -1,6 +1,8 @@
 "use strict";
 
-var version = 0.5;
+var bugfixVersion = 6; // As any features necessary for first release missing are bugs.
+var featureVersion = 0; // As features necessary for first release missing.
+var version = featureVersion + "." + bugfixVersion;
 
 var haveCSV = false;
 var haveSVG = false;
@@ -20,9 +22,12 @@ function lowlight(e) {
 
 // Pass selected SVG file to the displaying element.
 function handleSvgFileSelect(evt) {
-  var file = evt.target.value; // FileList object
-  var elem = document.getElementById("svgresult");
-  elem.data = file;
+  var reader = new FileReader();
+  reader.onload = function(readerEvent) {
+     var elem = document.getElementById("svgresult");
+     elem.data = readerEvent.target.result;
+  };
+  reader.readAsDataURL(evt.target.files[0]);
 }
 
 // Listener for the element which displays the SVG. This globally
