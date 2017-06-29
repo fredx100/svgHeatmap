@@ -1,6 +1,6 @@
 "use strict";
 
-var version = 0.4;
+var version = 0.5;
 
 var haveCSV = false;
 var haveSVG = false;
@@ -128,7 +128,7 @@ function updateSVGByKey (element) {
       }
 
     } else {
-      console.log("KEY \"" + keystring + "\" not found in SVG.");
+      console.log("svgHeatmap: WARNING: KEY \"" + keystring + "\" not found in SVG.");
     }
   }
 }
@@ -162,6 +162,34 @@ function handleCsvFileSelect(evt) {
   var file = evt.target.files[0]; // FileList object
   getCsvObj(file); // read the file contents
 }
+
+// TODO: Modify this to work.
+// TODO: upvote if this works!!!
+// https://stackoverflow.com/a/32609537/885587
+// save SVG
+function saveToFile(elem) {
+  var svgs = elem.contentDocument.getElementsByTagName("svg");
+
+  if (svgs.length > 0) {
+    // Create new link to SVG data
+    var a      = document.createElement('a');
+    // TODO: The following ALMOST works. However, hashes in the svg header
+    // urls break the stream. Manually removing them allows the save to
+    // work, but clearly this isn't robust. uncomment() doesn't seem to
+    // help - look into this. (Could just write a function to remove
+    // them)
+    a.href     = 'data:image/svg+xml;utf8,' + svgs[0].outerHTML;
+    a.download = 'heatmap.svg'; // TODO: use save dialog
+    a.target   = '_blank';
+
+    // Use newly created link
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    console.log("svgHeatmap: ERROR: SVG not found.");
+  }
+};
 
 window.onload = function () {
   document.getElementById("csvfile").addEventListener("change", handleCsvFileSelect);

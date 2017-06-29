@@ -6,7 +6,7 @@ body {
 p {
     margin: 0mm
 }
-h1,p.outer {
+h1,p,input.outer {
     margin: 0mm 8mm;
 }
 div.section {
