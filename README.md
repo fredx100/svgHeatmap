@@ -6,8 +6,8 @@ image to create a heatmap or cloropleth from changing/differing data
 sets.
 
 There are no external dependencies, which means this project can be used
-offline, and (the hope is) that it's easier to trust the code if it's
-not fetching libraries from the web.
+offline. As well as making the project more portable, the hope is that
+this makes it easier to trust the code.
 
 ## Installation
 
@@ -40,8 +40,8 @@ CSV files can be produced from virtually any spreadsheet program.
 LibreOffice Calc, is one example. Microsoft Excel would also work, at a
 pinch.
 
-The CSV file must have rows consisting of
-\<Region name\>, \<region value\>
+The CSV file must have rows consisting of  
+\<region name\>, \<region value\>  
 pairs. Provided the Region name matches (case-sensitive) exactly with an
 id from the SVG the region value will be applied.
 
