@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 6; // As any features necessary for first release missing are bugs.
+var bugfixVersion = 7; // As any features necessary for first release missing are bugs.
 var featureVersion = 0; // As features necessary for first release missing.
 var version = featureVersion + "." + bugfixVersion;
 
@@ -11,7 +11,7 @@ var csvObj = undefined;
 var mySvgDoc = undefined;
 
 function highlight(e) {
-  this.style["stroke-width"] = 5;
+  this.style["stroke-width"] = 3;
   this.style.stroke = "red";
 }
 
@@ -24,8 +24,8 @@ function lowlight(e) {
 function handleSvgFileSelect(evt) {
   var reader = new FileReader();
   reader.onload = function(readerEvent) {
-     var elem = document.getElementById("svgresult");
-     elem.data = readerEvent.target.result;
+    var elem = document.getElementById("svgresult");
+    elem.data = readerEvent.target.result;
   };
   reader.readAsDataURL(evt.target.files[0]);
 }
@@ -168,9 +168,6 @@ function handleCsvFileSelect(evt) {
   getCsvObj(file); // read the file contents
 }
 
-// TODO: Modify this to work.
-// TODO: upvote if this works!!!
-// https://stackoverflow.com/a/32609537/885587
 // save SVG
 function saveToFile(elem) {
   var svgs = elem.contentDocument.getElementsByTagName("svg");
@@ -178,12 +175,7 @@ function saveToFile(elem) {
   if (svgs.length > 0) {
     // Create new link to SVG data
     var a      = document.createElement('a');
-    // TODO: The following ALMOST works. However, hashes in the svg header
-    // urls break the stream. Manually removing them allows the save to
-    // work, but clearly this isn't robust. uncomment() doesn't seem to
-    // help - look into this. (Could just write a function to remove
-    // them)
-    a.href     = 'data:image/svg+xml;utf8,' + svgs[0].outerHTML;
+    a.href     = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgs[0].outerHTML)));
     a.download = 'heatmap.svg'; // TODO: use save dialog
     a.target   = '_blank';
 

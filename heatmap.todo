@@ -58,7 +58,7 @@ Tasks {
         > It seems unneccessary.
     v loading svg
     v Applying csv to svg.
-    > svg save
+    v svg save
     > form to set preferences
         > colour
             > single colour
@@ -66,6 +66,7 @@ Tasks {
         > scale
             > limits
             > log/linear/exp
+            > units
 }
 
 # vim: shiftwidth=4
