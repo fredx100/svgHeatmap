@@ -28,8 +28,8 @@ The only requirements of the SVG are that the regions which are required
 to be programatically filled must have a unique id.
 
 Creating an SVG file is beyond the scope of this project. I would
-recommend Inkscape for this job (although virtually any program capable
-of producing SVGs will suffice).
+recommend [Inkscape](https://inkscape.org) for this job (although
+virtually any program capable of producing SVGs will suffice).
 
 In Inkscape the id of a closed path can be set from the "Object
 Properties" panel (opened with Ctrl-Shift-O).
