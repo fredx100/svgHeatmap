@@ -10,14 +10,41 @@ var units = "%";
 var csvObj = undefined;
 var mySvgDoc = undefined;
 
+var lastStrokeWidth = undefined;
+var lastStrokeColour = undefined;
+
+function max(a, b) {
+   return (a > b) ? a : b;
+}
+
+// Increase a "stroke-width" string to the maximum of 3<units> or
+// current width.
+function increaseSWTo3(sw) {
+  var swUnit;
+  var swVal;
+  var i = 0;
+  while (sw[i] >= '0' && sw[i] <= '9') {
+     ++i;
+  }
+  swVal = sw.slice(0, i);
+  swUnit = sw.slice(i);
+  swVal = max(swVal, 3);
+  return swVal + swUnit;
+}
+
 function highlight(e) {
-  this.style["stroke-width"] = 3;
+  // Save the existing colour/width for later restoration.
+  lastStrokeWidth = this.style["stroke-width"];
+  lastStrokeColour = this.style.stroke;
+
+  this.style["stroke-width"] = increaseSWTo3(lastStrokeWidth);
   this.style.stroke = "red";
 }
 
 function lowlight(e) {
-  this.style["stroke-width"] = 1;
-  this.style.stroke = "black";
+  // Restore the previous width/colour.
+  this.style["stroke-width"] = lastStrokeWidth;
+  this.style.stroke = lastStrokeColour;
 }
 
 // Pass selected SVG file to the displaying element.

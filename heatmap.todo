@@ -33,11 +33,6 @@ Requirements {
     > If output format is svg then do "proper" grouping to allow
       post-creation editing.
 }
-Notes {
-    > Set alt text to something useful
-        > Area name
-        > stat
-}
 Language {
     x python
         > get to learn python
@@ -67,6 +62,11 @@ Tasks {
             > limits
             > log/linear/exp
             > units
+}
+Bugs {
+    > Scale of transparancy is wrong. In US example ~9% and 16% are
+      indistinguishable, wheras 4.6% and 4.8% are not.
+        > Would adding the legend help here?
 }
 
 # vim: shiftwidth=4
