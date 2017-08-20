@@ -9,12 +9,21 @@ p {
 h1,p,input.outer {
     margin: 0mm 8mm;
 }
-div.section {
+div {
     padding: 2mm;
     margin: 4mm;
-    border: 3px solid grey;
     border-radius: 8px;
+}
+div.section {
+    border: 3px solid grey;
+}
+div.option {
+    border: 1px solid grey;
+    display: none;
 }
 input {
     background: lightgrey;
+}
+td.wiiide {
+    width: 100%;
 }

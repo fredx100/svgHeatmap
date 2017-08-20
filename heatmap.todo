@@ -55,15 +55,15 @@ Tasks {
     v Applying csv to svg.
     v svg save
     > form to set preferences
-        > colour
+        v colour
             > single colour
             > a-b colour?
+        > Match criteria
+            > regex for each of CSV and SVG names
         > scale
             > limits
             > log/linear/exp
             > units
-        > Match criteria
-            > regex for each of CSV and SVG names
     > Legend
 }
 Bugs {

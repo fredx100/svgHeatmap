@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 7; // As any features necessary for first release missing are bugs.
+var bugfixVersion = 8; // As any features necessary for first release missing are bugs.
 var featureVersion = 0; // As features necessary for first release missing.
 var version = featureVersion + "." + bugfixVersion;
 
@@ -9,6 +9,11 @@ var haveSVG = false;
 var units = "%";
 var csvObj = undefined;
 var mySvgDoc = undefined;
+
+var highColour = "#00FF00";
+var highTransparent = false;
+var lowColour = "#FF0000";
+var lowTransparent = true;
 
 var lastStrokeWidth = undefined;
 var lastStrokeColour = undefined;
@@ -132,6 +137,39 @@ function csvArrayToObject(csvArray) {
   csvObj.rangeFactor = 1.0 / (csvObj.max - csvObj.min);
 }
 
+// Return the colour ("#??????") resulting in interpolation between
+// highColour and lowColour (don't forget transparencies!)
+//
+// We assume,
+//     interp \in [0.0,1.0]
+function setColour (elem, interp) {
+    if (lowTransparent && highTransparent) {
+      elem.style["fill-opacity"] = 0;
+    } else if (lowTransparent) {
+      elem.style.fill = highColour;
+      elem.style["fill-opacity"] = interp;
+    } else if (highTransparent) {
+      elem.style.fill = lowColour;
+      elem.style["fill-opacity"] = 1.0 - interp;
+    } else {
+      var highRed   = parseInt(highColour.slice(1,3),16);
+      var highGreen = parseInt(highColour.slice(3,5),16);
+      var highBlue  = parseInt(highColour.slice(5,7),16);
+      var lowRed   = parseInt(lowColour.slice(1,3),16);
+      var lowGreen = parseInt(lowColour.slice(3,5),16);
+      var lowBlue  = parseInt(lowColour.slice(5,7),16);
+      var red   = (highRed * interp) + (lowRed * (1.0 - interp));
+      var green = (highGreen * interp) + (lowGreen * (1.0 - interp));
+      var blue  = (highBlue * interp) + (lowBlue * (1.0 - interp));
+      var redString   = ("00" + Math.floor(red).toString(16)).substr(-2);
+      var greenString = ("00" + Math.floor(green).toString(16)).substr(-2);
+      var blueString  = ("00" + Math.floor(blue).toString(16)).substr(-2);
+      elem.style.fill = "#" + redString + greenString + blueString;
+      elem.style["fill-opacity"] = 1.0; // In case it's previously been set lower.
+    }
+}
+
+
 // Using data from the global object csvObj, update the SVG element with
 // <name> given that element = "KEY_<name>".
 function updateSVGByKey (element) {
@@ -142,8 +180,7 @@ function updateSVGByKey (element) {
     if (elem !== null) {
       elem.addEventListener("mouseenter", highlight);
       elem.addEventListener("mouseleave", lowlight);
-      elem.style.fill = "#0000FF";
-      elem.style["fill-opacity"] = (csvObj[element] - csvObj.min) * csvObj.rangeFactor;
+      setColour (elem, (csvObj[element] - csvObj.min) * csvObj.rangeFactor);
 
       // Add a "title" element.
       var titleString = keystring + ": " + csvObj[element] + " " + units;
@@ -216,10 +253,75 @@ function saveToFile(elem) {
   }
 };
 
+// Toggle the visibility of the options
+function toggleOptionsVisible() {
+  var button = document.getElementById("toggleOptions");
+  var options = document.getElementsByClassName("option");
+
+  if (button.innerText === "Show") {
+    // Set class' visibility
+    for (var i = 0; i < options.length; ++i) {
+      options[i].style.display = 'block'
+    }
+    // Change button's text
+    button.innerText = "Hide";
+  } else {
+    // Set class' visibility
+    for (var i = 0; i < options.length; ++i) {
+      options[i].style.display = 'none'
+    }
+    // Change button's text
+    button.innerText = "Show";
+  }
+}
+
+function toggleColourTransparency(evt) {
+  var targetColour;
+  var setTransparent = evt.target.checked;
+
+  if (evt.target.id === "lowTransparent") {
+    // Affect low colours
+    targetColour = document.getElementById("lowColour");
+    if (setTransparent) {
+      targetColour.disabled = true;
+      lowTransparent = true;
+    } else {
+      targetColour.disabled = false;
+      lowTransparent = false;
+    }
+  } else {
+    // Affect high colours
+    targetColour = document.getElementById("highColour");
+    if (setTransparent) {
+      targetColour.disabled = true;
+      highTransparent = true;
+    } else {
+      targetColour.disabled = false;
+      highTransparent = false;
+    }
+  }
+  updateSvg();
+}
+
+function changeColour(evt) {
+  if (evt.target.id === "lowColour") {
+    lowColour = evt.target.value;
+  } else {
+    highColour = evt.target.value;
+  }
+  updateSvg();
+}
+
 window.onload = function () {
   document.getElementById("csvfile").addEventListener("change", handleCsvFileSelect);
   document.getElementById("svgfile").addEventListener("change", handleSvgFileSelect);
   document.getElementById("svgresult").addEventListener("load", registerSvg);
   document.getElementById("version").textContent = "Version " + version;
+
+  // Colour options
+  document.getElementById("lowTransparent").addEventListener("change", toggleColourTransparency);
+  document.getElementById("highTransparent").addEventListener("change", toggleColourTransparency);
+  document.getElementById("lowColour").addEventListener("change", changeColour);
+  document.getElementById("highColour").addEventListener("change", changeColour);
 };
 

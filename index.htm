@@ -13,8 +13,16 @@
 
     <div id="inputs" class="section">
       <table>
-        <tr><td>Select SVG image</td><td><input type="file" id="svgfile" accept=".svg,image/svg+xml"/></td></tr>
-        <tr><td>Select CSV data</td> <td><input type="file" id="csvfile" accept=".csv,text/csv"/></td></tr>
+        <tr>
+          <td>SVG&nbspimage:</td>
+          <td class="wiiide"></td>
+          <td><input type="file" id="svgfile" accept=".svg,image/svg+xml"/></td>
+        </tr>
+        <tr>
+          <td>CSV&nbspdata:</td>
+          <td class="wiiide"></td>
+          <td><input type="file" id="csvfile" accept=".csv,text/csv"/></td>
+        </tr>
       </table>
     </div>
 
@@ -25,5 +33,38 @@
     </div>
 
     <input id="saveButton" class="outer" type="button" value="Save" onclick="saveToFile(svgresult);" />
+
+    <!-- Options -->
+    <div id="options" class="section">
+      <table>
+        <tr>
+          <td>Options</td>
+          <td class="wiiide"></td>
+          <td><button id="toggleOptions" onClick="toggleOptionsVisible()">Show</button></td>
+        </tr>
+      </table>
+
+      <!-- Colours -->
+      <div class="option">
+        <table width="100%">
+          <tr>
+            <td>Low Colour: </td>
+            <td>
+              <label for="lowTransparent">Transparent</label>
+              <input type="checkbox" id="lowTransparent" checked />
+            </td>
+            <td><input type="color" id="lowColour" value="#FF0000" disabled /></td>
+          </tr>
+          <tr>
+            <td>High Colour: </td>
+            <td>
+              <label for="highTransparent">Transparent</label>
+              <input type="checkbox" id="highTransparent" />
+            </td>
+            <td><input type="color" id="highColour" value="#00FF00" /></td>
+          </tr>
+        </table>
+      </div>
+    </div>
   </body>
 </html>
