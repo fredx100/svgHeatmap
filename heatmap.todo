@@ -62,11 +62,11 @@ Tasks {
             > limits
             > log/linear/exp
             > units
+        > Match criteria
+            > regex for each of CSV and SVG names
+    > Legend
 }
 Bugs {
-    > Scale of transparancy is wrong. In US example ~9% and 16% are
-      indistinguishable, wheras 4.6% and 4.8% are not.
-        > Would adding the legend help here?
 }
 
 # vim: shiftwidth=4

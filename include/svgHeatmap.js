@@ -111,12 +111,13 @@ function checkValidData(csvArray) {
 
 // Convert an array row to an element
 function csvRowToElement(element) {
-  csvObj["KEY_" + element[0]] = element[1];
-  if (element[1] > csvObj.max) {
-    csvObj.max = element[1];
+  var elemFloat = parseFloat(element[1]);
+  csvObj["KEY_" + element[0]] = elemFloat;
+  if (elemFloat > csvObj.max) {
+    csvObj.max = elemFloat;
   }
-  if (element[1] < csvObj.min) {
-    csvObj.min = element[1];
+  if (elemFloat < csvObj.min) {
+    csvObj.min = elemFloat;
   }
 }
 
