@@ -21,8 +21,11 @@ div.option {
     border: 1px solid grey;
     display: none;
 }
-input {
-    background: lightgrey;
+input.range {
+   max-width: 45px;
+}
+td.centre {
+   text-align: center;
 }
 td.wiiide {
     width: 100%;

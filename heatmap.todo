@@ -60,8 +60,9 @@ Tasks {
             > a-b colour?
         > Match criteria
             > regex for each of CSV and SVG names
+            > Fuzzy match?
         > scale
-            > limits
+            v limits
             > log/linear/exp
             > units
     > Legend

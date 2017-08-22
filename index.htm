@@ -32,7 +32,7 @@
       </object>
     </div>
 
-    <input id="saveButton" class="outer" type="button" value="Save" onclick="saveToFile(svgresult);" />
+    <input id="saveButton" class="outer" type="button" value="Save" onClick="saveToFile(svgresult);" />
 
     <!-- Options -->
     <div id="options" class="section">
@@ -47,21 +47,51 @@
       <!-- Colours -->
       <div class="option">
         <table width="100%">
+          <tr><th></th><th></th><th>Value</th><th>Colour</th></tr>
           <tr>
-            <td>Low Colour: </td>
-            <td>
-              <label for="lowTransparent">Transparent</label>
-              <input type="checkbox" id="lowTransparent" checked />
+            <td></td>
+            <td>Low:</td>
+            <td class="centre">
+              <label for="lowValAuto">Auto</label>
+              <input type="checkbox" id="lowValAuto" checked />
+              <input class="range" type="number" id="lowValue" value="0" />
             </td>
-            <td><input type="color" id="lowColour" value="#FF0000" disabled /></td>
+            <td class="centre">
+              <label for="lowTransparent">Transparent</label>
+              <input type="checkbox" id="lowTransparent" />
+              <input type="color" id="lowColour" value="#FF0000" />
+            </td>
           </tr>
           <tr>
-            <td>High Colour: </td>
             <td>
+              <label for="midValEnable">Enable</label>
+              <input type="checkbox" id="midValEnable" checked />
+            </td>
+            <td>Mid:</td>
+            <td class="centre">
+              <label for="midValAuto">Auto</label>
+              <input type="checkbox" id="midValAuto" checked />
+              <input class="range" type="number" id="midValue" value="5"/>
+            </td>
+            <td class="centre">
+              <label for="midTransparent">Transparent</label>
+              <input type="checkbox" id="midTransparent" />
+              <input type="color" id="midColour" value="#FFFF00" />
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>High:</td>
+            <td class="centre">
+              <label for="highValAuto">Auto</label>
+              <input type="checkbox" id="highValAuto" checked />
+              <input class="range" type="number" id="highValue" value="10" />
+            </td>
+            <td class="centre">
               <label for="highTransparent">Transparent</label>
               <input type="checkbox" id="highTransparent" />
+              <input type="color" id="highColour" value="#00FF00" />
             </td>
-            <td><input type="color" id="highColour" value="#00FF00" /></td>
           </tr>
         </table>
       </div>

@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 8; // As any features necessary for first release missing are bugs.
+var bugfixVersion = 9; // As any features necessary for first release missing are bugs.
 var featureVersion = 0; // As features necessary for first release missing.
 var version = featureVersion + "." + bugfixVersion;
 
@@ -10,10 +10,16 @@ var units = "%";
 var csvObj = undefined;
 var mySvgDoc = undefined;
 
+var highVal = undefined;
 var highColour = "#00FF00";
 var highTransparent = false;
+var midVal = undefined;
+var midValEnable = true;
+var midColour = "#FFFF00";
+var midTransparent = false;
+var lowVal = undefined;
 var lowColour = "#FF0000";
-var lowTransparent = true;
+var lowTransparent = false;
 
 var lastStrokeWidth = undefined;
 var lastStrokeColour = undefined;
@@ -138,35 +144,63 @@ function csvArrayToObject(csvArray) {
 }
 
 // Return the colour ("#??????") resulting in interpolation between
-// highColour and lowColour (don't forget transparencies!)
-//
-// We assume,
-//     interp \in [0.0,1.0]
-function setColour (elem, interp) {
-    if (lowTransparent && highTransparent) {
-      elem.style["fill-opacity"] = 0;
-    } else if (lowTransparent) {
-      elem.style.fill = highColour;
-      elem.style["fill-opacity"] = interp;
-    } else if (highTransparent) {
-      elem.style.fill = lowColour;
-      elem.style["fill-opacity"] = 1.0 - interp;
+// highColour, midColour, and lowColour (don't forget transparencies!)
+function setColour (elem, val) {
+  // Choose the relevant high and low values
+  var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+  var lHighColour = highColour;
+  var lHighTransparent = highTransparent;
+  var lMidVal = (midVal === undefined) ? ((csvObj.max - csvObj.min) / 2) + csvObj.min : midVal;
+  var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+  var lLowColour = lowColour;
+  var lLowTransparent = lowTransparent;
+  if (midValEnable) {
+    if (val >= lMidVal) {
+      lLowVal = lMidVal;
+      lLowColour = midColour;
+      lLowTransparent = midTransparent;
     } else {
-      var highRed   = parseInt(highColour.slice(1,3),16);
-      var highGreen = parseInt(highColour.slice(3,5),16);
-      var highBlue  = parseInt(highColour.slice(5,7),16);
-      var lowRed   = parseInt(lowColour.slice(1,3),16);
-      var lowGreen = parseInt(lowColour.slice(3,5),16);
-      var lowBlue  = parseInt(lowColour.slice(5,7),16);
-      var red   = (highRed * interp) + (lowRed * (1.0 - interp));
-      var green = (highGreen * interp) + (lowGreen * (1.0 - interp));
-      var blue  = (highBlue * interp) + (lowBlue * (1.0 - interp));
-      var redString   = ("00" + Math.floor(red).toString(16)).substr(-2);
-      var greenString = ("00" + Math.floor(green).toString(16)).substr(-2);
-      var blueString  = ("00" + Math.floor(blue).toString(16)).substr(-2);
-      elem.style.fill = "#" + redString + greenString + blueString;
-      elem.style["fill-opacity"] = 1.0; // In case it's previously been set lower.
+      lHighVal = lMidVal;
+      lHighColour = midColour;
+      lHighTransparent = midTransparent;
     }
+  }
+
+  // Calc the interpolant
+  var interp;
+  if (val >= lHighVal) {
+     interp = 1.0;
+  } else if (val <= lLowVal) {
+     interp = 0.0;
+  } else {
+     interp = (val - lLowVal) / (lHighVal - lLowVal);
+  }
+
+  // Interpolate
+  if (lLowTransparent && lHighTransparent) {
+    elem.style["fill-opacity"] = 0;
+  } else if (lLowTransparent) {
+    elem.style.fill = lHighColour;
+    elem.style["fill-opacity"] = interp;
+  } else if (lHighTransparent) {
+    elem.style.fill = lLowColour;
+    elem.style["fill-opacity"] = 1.0 - interp;
+  } else {
+    var highRed   = parseInt(lHighColour.slice(1,3),16);
+    var highGreen = parseInt(lHighColour.slice(3,5),16);
+    var highBlue  = parseInt(lHighColour.slice(5,7),16);
+    var lowRed   = parseInt(lLowColour.slice(1,3),16);
+    var lowGreen = parseInt(lLowColour.slice(3,5),16);
+    var lowBlue  = parseInt(lLowColour.slice(5,7),16);
+    var red   = (highRed * interp) + (lowRed * (1.0 - interp));
+    var green = (highGreen * interp) + (lowGreen * (1.0 - interp));
+    var blue  = (highBlue * interp) + (lowBlue * (1.0 - interp));
+    var redString   = ("00" + Math.floor(red).toString(16)).substr(-2);
+    var greenString = ("00" + Math.floor(green).toString(16)).substr(-2);
+    var blueString  = ("00" + Math.floor(blue).toString(16)).substr(-2);
+    elem.style.fill = "#" + redString + greenString + blueString;
+    elem.style["fill-opacity"] = 1.0; // In case it's previously been set lower.
+  }
 }
 
 
@@ -180,7 +214,7 @@ function updateSVGByKey (element) {
     if (elem !== null) {
       elem.addEventListener("mouseenter", highlight);
       elem.addEventListener("mouseleave", lowlight);
-      setColour (elem, (csvObj[element] - csvObj.min) * csvObj.rangeFactor);
+      setColour (elem, csvObj[element]);
 
       // Add a "title" element.
       var titleString = keystring + ": " + csvObj[element] + " " + units;
@@ -281,22 +315,23 @@ function toggleColourTransparency(evt) {
 
   if (evt.target.id === "lowTransparent") {
     // Affect low colours
-    targetColour = document.getElementById("lowColour");
     if (setTransparent) {
-      targetColour.disabled = true;
       lowTransparent = true;
     } else {
-      targetColour.disabled = false;
       lowTransparent = false;
+    }
+  } else if (evt.target.id === "midTransparent") {
+    // Affect mid colours
+    if (setTransparent) {
+      midTransparent = true;
+    } else {
+      midTransparent = false;
     }
   } else {
     // Affect high colours
-    targetColour = document.getElementById("highColour");
     if (setTransparent) {
-      targetColour.disabled = true;
       highTransparent = true;
     } else {
-      targetColour.disabled = false;
       highTransparent = false;
     }
   }
@@ -304,11 +339,78 @@ function toggleColourTransparency(evt) {
 }
 
 function changeColour(evt) {
+  var checkTransparent;
   if (evt.target.id === "lowColour") {
-    lowColour = evt.target.value;
+    checkTransparent = document.getElementById("lowTransparent");
+    if (!checkTransparent.value.checked) {
+      lowColour = evt.target.value;
+    }
+  } else if (evt.target.id === "midColour") {
+    checkTransparent = document.getElementById("midTransparent");
+    if (!checkTransparent.value.checked) {
+      midColour = evt.target.value;
+    }
   } else {
-    highColour = evt.target.value;
+    checkTransparent = document.getElementById("highTransparent");
+    if (!checkTransparent.value.checked) {
+      highColour = evt.target.value;
+    }
   }
+  updateSvg();
+}
+
+function toggleValAuto(evt) {
+  var numInput;
+
+  if (evt.target.id === "lowValAuto") {
+    if (evt.target.value.checked) {
+      lowVal = undefined;
+    } else {
+      numInput = document.getElementById("lowValue");
+      lowVal = numInput.value;
+    }
+  } else if (evt.target.id === "midValAuto") {
+    if (evt.target.value.checked) {
+      midVal = undefined;
+    } else {
+      numInput = document.getElementById("midValue");
+      midVal = numInput.value;
+    }
+  } else { // high
+    if (evt.target.value.checked) {
+      highVal = undefined;
+    } else {
+      numInput = document.getElementById("highValue");
+      highVal = numInput.value;
+    }
+  }
+  updateSvg();
+}
+
+function setRangeVal(evt) {
+  var valEnabled;
+
+  if (evt.target.id === "lowValue") {
+    valEnabled = document.getElementById("lowValAuto");
+    if (!valEnabled.value.checked) {
+      lowVal = evt.target.value;
+    }
+  } else if (evt.target.id === "midValue") {
+    valEnabled = document.getElementById("midValAuto");
+    if (!valEnabled.value.checked) {
+      midVal = evt.target.value;
+    }
+  } else { // high
+    valEnabled = document.getElementById("highValAuto");
+    if (!valEnabled.value.checked) {
+      highVal = evt.target.value;
+    }
+  }
+  updateSvg();
+}
+
+function toggleMidValEnable(evt) {
+  midValEnable = !midValEnable;
   updateSvg();
 }
 
@@ -319,9 +421,20 @@ window.onload = function () {
   document.getElementById("version").textContent = "Version " + version;
 
   // Colour options
+  document.getElementById("lowValAuto").addEventListener("change", toggleValAuto);
+  document.getElementById("lowValue").addEventListener("change", setRangeVal);
   document.getElementById("lowTransparent").addEventListener("change", toggleColourTransparency);
-  document.getElementById("highTransparent").addEventListener("change", toggleColourTransparency);
   document.getElementById("lowColour").addEventListener("change", changeColour);
+
+  document.getElementById("midValEnable").addEventListener("change", toggleMidValEnable);
+  document.getElementById("midValAuto").addEventListener("change", toggleValAuto);
+  document.getElementById("midValue").addEventListener("change", setRangeVal);
+  document.getElementById("midTransparent").addEventListener("change", toggleColourTransparency);
+  document.getElementById("midColour").addEventListener("change", changeColour);
+
+  document.getElementById("highValAuto").addEventListener("change", toggleValAuto);
+  document.getElementById("highValue").addEventListener("change", setRangeVal);
+  document.getElementById("highTransparent").addEventListener("change", toggleColourTransparency);
   document.getElementById("highColour").addEventListener("change", changeColour);
 };
 
