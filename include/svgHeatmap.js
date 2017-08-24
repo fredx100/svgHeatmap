@@ -241,6 +241,14 @@ function updateSVGByKey (element) {
 function updateSvg() {
   if (haveSVG && haveCSV) {
     Object.keys(csvObj).forEach(updateSVGByKey);
+    var oldLegend = document.getElementById("legend");
+    var x = undefined;
+    var y = undefined;
+    if (oldLegend != undefined) {
+       // TODO: put oldLegend's translate(x,y) values into x and y
+       oldLegend.parentNode.removeChild(oldLegend);
+    }
+    addLegend(x,y)
   }
 }
 
@@ -412,6 +420,105 @@ function setRangeVal(evt) {
 function toggleMidValEnable(evt) {
   midValEnable = !midValEnable;
   updateSvg();
+}
+
+function addLegend(x,y) {
+  var svgNS = mySvgDoc.namespaceURI;
+  var newGroup  = document.createElementNS(svgNS,'g');
+  newGroup.id = "legend";
+  newGroup.addEventListener("drag", moveLegend);
+
+  // Add the background
+  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
+  elem.x = 0;
+  elem.y = 0;
+  elem.width = mySvgDoc.width / 5; // TODO; .width is probably a string
+  elem.height = elem.width * 1.5; // TODO; .width is probably a string
+  elem.rx = 3;
+  elem.ry = 3;
+  elem.style.fill = "#FFFFFF";
+  elem.style.stroke = "#000000";
+  elem.style.strokeWidth = "1px";
+  newGroup.appendChild(elem);
+
+  var lwidth = elem.width;
+  var lheight = elem.height;
+  var offset = lwidth / 10;
+
+  // Offset newGroup
+  var gx = (x != undefined) ? x : (mySvgDoc.width - lwidth - (2 * offset));
+  var gy = (y != undefined) ? y : ((mySvgDoc.height - lheight) / 2);
+  newGroup.transform = "translate(gx,gy)";
+
+  // Put a chequered pattern behind the colour bar to illustrate
+  // transparency.
+  // TODO
+
+  // Add the Colour bar
+  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
+  elem.x = offset;
+  elem.y = offset;
+  elem.width = lwidth / 4; // TODO; .width is probably a string
+  elem.height = lheight - (2 * offset); // TODO; .width is probably a string
+  elem.rx = 3;
+  elem.ry = 3;
+  elem.style.fill = "#FFFFFF";
+  elem.style.stroke = "#000000";
+  elem.style.strokeWidth = "1px";
+  elem.attr({fill:'url(#legendGrad)'});
+  newGroup.appendChild(elem);
+
+  // Add labels to the Colour bar
+  // TODO
+
+  // Add newGroup to svg
+}
+
+// Taken from https://stackoverflow.com/a/10898304/885587
+function createLegendGradient(){
+  var svgNS = mySvgDoc.namespaceURI;
+  var grad  = document.createElementNS(svgNS,'linearGradient');
+  grad.setAttribute('id',legendGrad);
+
+  // Create high to low
+  grad.x1 = "0%";
+  grad.y1 = "100%";
+  grad.x2 = "0%";
+  grad.y2 = "0%";
+
+  // High
+  var stop = document.createElementNS(svgNS,'stop');
+  stop.offset = "0%";
+  stop.stopColor = highColour;
+  stop.stopOpacity = (highTransparent ? 0.0 : 1.0);
+  grad.appendChild(stop);
+
+  // Mid
+  if (midValEnable) {
+     stop = document.createElementNS(svgNS,'stop');
+     var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+     var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+     stop.offset = ((midVal === undefined) ? "50%"
+                                           : (((midVal - lLowVal) / (lHighVal - lLowVal)) * 100) + "%");
+     stop.stopColor = midColour;
+     stop.stopOpacity = (midTransparent ? 0.0 : 1.0);
+     grad.appendChild(stop);
+  }
+
+  // Low
+  stop = document.createElementNS(svgNS,'stop');
+  stop.offset = "0%";
+  stop.stopColor = lowColour;
+  stop.stopOpacity = (lowTransparent ? 0.0 : 1.0);
+  grad.appendChild(stop);
+
+  var defs = mySvgDoc.querySelector('defs') ||
+             mySvgDoc.insertBefore( document.createElementNS(svgNS,'defs'), svg.firstChild);
+  return defs.appendChild(grad);
+}
+
+function moveLegend(evt) {
+   // TODO
 }
 
 window.onload = function () {
