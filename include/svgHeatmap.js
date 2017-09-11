@@ -28,6 +28,22 @@ function max(a, b) {
    return (a > b) ? a : b;
 }
 
+// In a string matching regex [0-9]+[^0-9]*, isolate the leading
+// numerical component and multiply it by the given multiplicand,
+// returning it as a string with the original units.
+function multString(orig, multiplicand) {
+  var origUnit;
+  var origVal;
+  var i = 0;
+  while (orig[i] >= '0' && orig[i] <= '9') {
+     ++i;
+  }
+  origVal = orig.slice(0, i);
+  origUnit = orig.slice(i);
+  origVal = origVal * multiplicand;
+  return origVal + origUnit;
+}
+
 // Increase a "stroke-width" string to the maximum of 3<units> or
 // current width.
 function increaseSWTo3(sw) {
@@ -242,13 +258,12 @@ function updateSvg() {
   if (haveSVG && haveCSV) {
     Object.keys(csvObj).forEach(updateSVGByKey);
     var oldLegend = document.getElementById("legend");
-    var x = undefined;
-    var y = undefined;
+    var transformString = undefined;
     if (oldLegend != undefined) {
-       // TODO: put oldLegend's translate(x,y) values into x and y
+       transformString = oldLegend.transform;
        oldLegend.parentNode.removeChild(oldLegend);
     }
-    addLegend(x,y)
+    addLegend(transformString);
   }
 }
 
@@ -422,33 +437,38 @@ function toggleMidValEnable(evt) {
   updateSvg();
 }
 
-function addLegend(x,y) {
+function addLegend(transformString) {
   var svgNS = mySvgDoc.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
   newGroup.addEventListener("drag", moveLegend);
 
   // Add the background
-  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
-  elem.x = 0;
-  elem.y = 0;
-  elem.width = mySvgDoc.width / 5; // TODO; .width is probably a string
-  elem.height = elem.width * 1.5; // TODO; .width is probably a string
-  elem.rx = 3;
-  elem.ry = 3;
+  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  var svgbbox = getSvgBb(mySvgDoc);
+  elem.setAttributeNS(null, 'x', 0);
+  elem.setAttributeNS(null, 'y', 0);
+  elem.setAttributeNS(null, 'width', (svgbbox.width / 5));
+  elem.setAttributeNS(null, 'height', elem.getAttribute('width') * 1.5);
+  elem.setAttributeNS(null, 'rx', 3);
+  elem.setAttributeNS(null, 'ry', 3);
   elem.style.fill = "#FFFFFF";
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
   newGroup.appendChild(elem);
 
-  var lwidth = elem.width;
-  var lheight = elem.height;
+  var lwidth = elem.getAttribute('width');
+  var lheight = elem.getAttribute('height');
   var offset = lwidth / 10;
 
   // Offset newGroup
-  var gx = (x != undefined) ? x : (mySvgDoc.width - lwidth - (2 * offset));
-  var gy = (y != undefined) ? y : ((mySvgDoc.height - lheight) / 2);
-  newGroup.transform = "translate(gx,gy)";
+  if (transformString !== undefined) {
+    newGroup.setAttributeNS(null, 'transform', transformString);
+  } else {
+    var gx = ((svgbbox.x + svgbbox.width) - lwidth - offset);
+    var gy = ((svgbbox.y + svgbbox.height) - lheight) / 2;
+    newGroup.setAttributeNS(null, 'transform', "translate(gx,gy)");
+  }
 
   // Put a chequered pattern behind the colour bar to illustrate
   // transparency.
@@ -456,22 +476,24 @@ function addLegend(x,y) {
 
   // Add the Colour bar
   var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
-  elem.x = offset;
-  elem.y = offset;
-  elem.width = lwidth / 4; // TODO; .width is probably a string
-  elem.height = lheight - (2 * offset); // TODO; .width is probably a string
-  elem.rx = 3;
-  elem.ry = 3;
-  elem.style.fill = "#FFFFFF";
+  elem.setAttributeNS(null, 'x', offset);
+  elem.setAttributeNS(null, 'y', offset);
+  elem.setAttributeNS(null, 'width', lwidth / 4);
+  elem.setAttributeNS(null, 'height', lheight - (2 * offset));
+  elem.setAttributeNS(null, 'rx', 3);
+  elem.setAttributeNS(null, 'ry', 3);
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
-  elem.attr({fill:'url(#legendGrad)'});
+  elem.style.fill = 'url(#legendGrad)';
+  //elem.attr({fill:'url(#legendGrad)'});
   newGroup.appendChild(elem);
 
   // Add labels to the Colour bar
   // TODO
 
   // Add newGroup to svg
+  var svg = mySvgDoc.getElementsByTagName('svg')[0];
+  svg.appendChild(newGroup);
 }
 
 // Taken from https://stackoverflow.com/a/10898304/885587
@@ -513,12 +535,36 @@ function createLegendGradient(){
   grad.appendChild(stop);
 
   var defs = mySvgDoc.querySelector('defs') ||
-             mySvgDoc.insertBefore( document.createElementNS(svgNS,'defs'), svg.firstChild);
+             mySvgDoc.insertBefore( document.createElementNS(svgNS,'defs'), mySvgDoc.firstChild);
   return defs.appendChild(grad);
 }
 
 function moveLegend(evt) {
    // TODO
+}
+
+// Get the size (in svg-units) of svg image
+function getSvgBb(svgContainer) {
+  var svg = svgContainer.getElementsByTagName('svg')[0];
+  var box = {x : undefined,
+             y : undefined,
+             width : undefined,
+             height : undefined}
+  // Try viewBox
+  if (svg.getAttribute('viewBox') !== null) {
+    box = svg.viewBox.baseVal;
+  } else {
+    // Use width/height
+    if ((svg.getAttribute('width') !== null) &&
+        (svg.getAttribute('height') !== null)) {
+       box.x = 0;
+       box.y = 0;
+       box.width = svg.getAttribute('width');
+       box.height = svg.getAttribute('height');
+    }
+  }
+
+  return box;
 }
 
 window.onload = function () {
