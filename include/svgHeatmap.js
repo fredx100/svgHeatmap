@@ -257,7 +257,9 @@ function updateSVGByKey (element) {
 function updateSvg() {
   if (haveSVG && haveCSV) {
     Object.keys(csvObj).forEach(updateSVGByKey);
-    var oldLegend = document.getElementById("legend");
+
+    // Update the legend
+    var oldLegend = mySvgDoc.getElementById("legend");
     var transformString = undefined;
     if (oldLegend != undefined) {
        transformString = oldLegend.transform;
@@ -365,17 +367,17 @@ function changeColour(evt) {
   var checkTransparent;
   if (evt.target.id === "lowColour") {
     checkTransparent = document.getElementById("lowTransparent");
-    if (!checkTransparent.value.checked) {
+    if (!checkTransparent.checked) {
       lowColour = evt.target.value;
     }
   } else if (evt.target.id === "midColour") {
     checkTransparent = document.getElementById("midTransparent");
-    if (!checkTransparent.value.checked) {
+    if (!checkTransparent.checked) {
       midColour = evt.target.value;
     }
   } else {
     checkTransparent = document.getElementById("highTransparent");
-    if (!checkTransparent.value.checked) {
+    if (!checkTransparent.checked) {
       highColour = evt.target.value;
     }
   }
@@ -386,21 +388,21 @@ function toggleValAuto(evt) {
   var numInput;
 
   if (evt.target.id === "lowValAuto") {
-    if (evt.target.value.checked) {
+    if (evt.target.checked) {
       lowVal = undefined;
     } else {
       numInput = document.getElementById("lowValue");
       lowVal = numInput.value;
     }
   } else if (evt.target.id === "midValAuto") {
-    if (evt.target.value.checked) {
+    if (evt.target.checked) {
       midVal = undefined;
     } else {
       numInput = document.getElementById("midValue");
       midVal = numInput.value;
     }
   } else { // high
-    if (evt.target.value.checked) {
+    if (evt.target.checked) {
       highVal = undefined;
     } else {
       numInput = document.getElementById("highValue");
@@ -415,18 +417,24 @@ function setRangeVal(evt) {
 
   if (evt.target.id === "lowValue") {
     valEnabled = document.getElementById("lowValAuto");
-    if (!valEnabled.value.checked) {
+    if (!valEnabled.checked) {
       lowVal = evt.target.value;
+    } else {
+      lowVal = undefined;
     }
   } else if (evt.target.id === "midValue") {
     valEnabled = document.getElementById("midValAuto");
-    if (!valEnabled.value.checked) {
+    if (!valEnabled.checked) {
       midVal = evt.target.value;
+    } else {
+      midVal = undefined;
     }
   } else { // high
     valEnabled = document.getElementById("highValAuto");
-    if (!valEnabled.value.checked) {
+    if (!valEnabled.checked) {
       highVal = evt.target.value;
+    } else {
+      highVal = undefined;
     }
   }
   updateSvg();
@@ -438,18 +446,19 @@ function toggleMidValEnable(evt) {
 }
 
 function addLegend(transformString) {
-  var svgNS = mySvgDoc.namespaceURI;
+  var svg = mySvgDoc.getElementsByTagName('svg')[0];
+  var svgNS = svg.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
   newGroup.addEventListener("drag", moveLegend);
 
   // Add the background
-  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  var elem = document.createElementNS(svgNS,"rect");
   var svgbbox = getSvgBb(mySvgDoc);
   elem.setAttributeNS(null, 'x', 0);
   elem.setAttributeNS(null, 'y', 0);
   elem.setAttributeNS(null, 'width', (svgbbox.width / 5));
-  elem.setAttributeNS(null, 'height', elem.getAttribute('width') * 1.5);
+  elem.setAttributeNS(null, 'height', (svgbbox.height / 3));
   elem.setAttributeNS(null, 'rx', 3);
   elem.setAttributeNS(null, 'ry', 3);
   elem.style.fill = "#FFFFFF";
@@ -467,7 +476,7 @@ function addLegend(transformString) {
   } else {
     var gx = ((svgbbox.x + svgbbox.width) - lwidth - offset);
     var gy = ((svgbbox.y + svgbbox.height) - lheight) / 2;
-    newGroup.setAttributeNS(null, 'transform', "translate(gx,gy)");
+    newGroup.setAttributeNS(null, 'transform', "translate(" + gx + "," + gy + ")");
   }
 
   // Put a chequered pattern behind the colour bar to illustrate
@@ -492,7 +501,6 @@ function addLegend(transformString) {
   // TODO
 
   // Add newGroup to svg
-  var svg = mySvgDoc.getElementsByTagName('svg')[0];
   svg.appendChild(newGroup);
 }
 
