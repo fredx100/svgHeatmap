@@ -519,7 +519,8 @@ function createLegendGradient(){
   grad.setAttribute('x2', "0%");
   grad.setAttribute('y2', "100%");
 
-  // High - no, I don't know why the high colour should be at 0%.
+  // High - no, I don't know why the high colour must be at 0%, but it
+  // must.
   stop = document.createElementNS(svgNS,'stop');
   stop.setAttribute('offset', "0%");
   stop.setAttribute('stop-color', highColour);
@@ -532,7 +533,7 @@ function createLegendGradient(){
      var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
      var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
      stop.setAttribute('offset', ((midVal === undefined) ? "50%"
-                                                         : (((midVal - lLowVal) / (lHighVal - lLowVal)) * 100) + "%"));
+                                                         : (((lHighVal - midVal) / (lHighVal - lLowVal)) * 100) + "%"));
      stop.setAttribute('stop-color', midColour);
      stop.setAttribute('stop-opacity', (midTransparent ? 0.0 : 1.0));
      grad.appendChild(stop);
@@ -547,7 +548,7 @@ function createLegendGradient(){
 
   // Ensure there's a defs section
   var defs = svg.querySelector('defs') ||
-             svg.insertBefore( document.createElementNS(svgNS,'defs'), svg.firstChild);
+             svg.insertBefore(document.createElementNS(svgNS,'defs'), svg.firstChild);
 
   // Remove old legendGrads
   var oldGrad = svg.getElementById('legendGrad');
