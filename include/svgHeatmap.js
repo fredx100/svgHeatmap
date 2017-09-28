@@ -262,7 +262,7 @@ function updateSvg() {
     var oldLegend = mySvgDoc.getElementById("legend");
     var transformString = undefined;
     if (oldLegend != undefined) {
-       transformString = oldLegend.transform;
+       transformString = oldLegend.getAttribute('transform');
        oldLegend.parentNode.removeChild(oldLegend);
     }
     addLegend(transformString);
@@ -457,7 +457,7 @@ function addLegend(transformString) {
   var svgbbox = getSvgBb(mySvgDoc);
   elem.setAttributeNS(null, 'x', 0);
   elem.setAttributeNS(null, 'y', 0);
-  elem.setAttributeNS(null, 'width', (svgbbox.width / 5));
+  elem.setAttributeNS(null, 'width', (svgbbox.width / 7));
   elem.setAttributeNS(null, 'height', (svgbbox.height / 3));
   elem.setAttributeNS(null, 'rx', 3);
   elem.setAttributeNS(null, 'ry', 3);
@@ -483,11 +483,13 @@ function addLegend(transformString) {
   // transparency.
   // TODO
 
+  createLegendGradient();
+
   // Add the Colour bar
   var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
   elem.setAttributeNS(null, 'x', offset);
   elem.setAttributeNS(null, 'y', offset);
-  elem.setAttributeNS(null, 'width', lwidth / 4);
+  elem.setAttributeNS(null, 'width', lwidth / 3);
   elem.setAttributeNS(null, 'height', lheight - (2 * offset));
   elem.setAttributeNS(null, 'rx', 3);
   elem.setAttributeNS(null, 'ry', 3);
@@ -506,21 +508,22 @@ function addLegend(transformString) {
 
 // Taken from https://stackoverflow.com/a/10898304/885587
 function createLegendGradient(){
-  var svgNS = mySvgDoc.namespaceURI;
+  var svg = mySvgDoc.getElementsByTagName('svg')[0];
+  var svgNS = svg.namespaceURI;
   var grad  = document.createElementNS(svgNS,'linearGradient');
-  grad.setAttribute('id',legendGrad);
+  grad.setAttribute('id','legendGrad');
 
-  // Create high to low
-  grad.x1 = "0%";
-  grad.y1 = "100%";
-  grad.x2 = "0%";
-  grad.y2 = "0%";
+  // Create low to high (it has to be in this order to work)
+  grad.setAttribute('x1', "0%");
+  grad.setAttribute('y1', "0%");
+  grad.setAttribute('x2', "0%");
+  grad.setAttribute('y2', "100%");
 
-  // High
-  var stop = document.createElementNS(svgNS,'stop');
-  stop.offset = "0%";
-  stop.stopColor = highColour;
-  stop.stopOpacity = (highTransparent ? 0.0 : 1.0);
+  // High - no, I don't know why the high colour should be at 0%.
+  stop = document.createElementNS(svgNS,'stop');
+  stop.setAttribute('offset', "0%");
+  stop.setAttribute('stop-color', highColour);
+  stop.setAttribute('stop-opacity', (highTransparent ? 0.0 : 1.0));
   grad.appendChild(stop);
 
   // Mid
@@ -528,22 +531,30 @@ function createLegendGradient(){
      stop = document.createElementNS(svgNS,'stop');
      var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
      var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
-     stop.offset = ((midVal === undefined) ? "50%"
-                                           : (((midVal - lLowVal) / (lHighVal - lLowVal)) * 100) + "%");
-     stop.stopColor = midColour;
-     stop.stopOpacity = (midTransparent ? 0.0 : 1.0);
+     stop.setAttribute('offset', ((midVal === undefined) ? "50%"
+                                                         : (((midVal - lLowVal) / (lHighVal - lLowVal)) * 100) + "%"));
+     stop.setAttribute('stop-color', midColour);
+     stop.setAttribute('stop-opacity', (midTransparent ? 0.0 : 1.0));
      grad.appendChild(stop);
   }
 
   // Low
-  stop = document.createElementNS(svgNS,'stop');
-  stop.offset = "0%";
-  stop.stopColor = lowColour;
-  stop.stopOpacity = (lowTransparent ? 0.0 : 1.0);
+  var stop = document.createElementNS(svgNS,'stop');
+  stop.setAttribute('offset', "100%");
+  stop.setAttribute('stop-color', lowColour);
+  stop.setAttribute('stop-opacity', (lowTransparent ? 0.0 : 1.0));
   grad.appendChild(stop);
 
-  var defs = mySvgDoc.querySelector('defs') ||
-             mySvgDoc.insertBefore( document.createElementNS(svgNS,'defs'), mySvgDoc.firstChild);
+  // Ensure there's a defs section
+  var defs = svg.querySelector('defs') ||
+             svg.insertBefore( document.createElementNS(svgNS,'defs'), svg.firstChild);
+
+  // Remove old legendGrads
+  var oldGrad = svg.getElementById('legendGrad');
+  if (oldGrad !== null) {
+    oldGrad.parentNode.removeChild(oldGrad);
+  }
+
   return defs.appendChild(grad);
 }
 
