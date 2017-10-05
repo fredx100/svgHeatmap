@@ -166,10 +166,10 @@ function setColour (elem, val) {
   var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
   var lHighColour = highColour;
   var lHighTransparent = highTransparent;
-  var lMidVal = (midVal === undefined) ? ((csvObj.max - csvObj.min) / 2) + csvObj.min : midVal;
   var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
   var lLowColour = lowColour;
   var lLowTransparent = lowTransparent;
+  var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
   if (midValEnable) {
     if (val >= lMidVal) {
       lLowVal = lMidVal;
@@ -486,7 +486,7 @@ function addLegend(transformString) {
   createLegendGradient();
 
   // Add the Colour bar
-  var elem = document.createElementNS("http://www.w3.org/2000/svg","rect")
+  var elem = document.createElementNS(svgNS,"rect")
   elem.setAttributeNS(null, 'x', offset);
   elem.setAttributeNS(null, 'y', offset);
   elem.setAttributeNS(null, 'width', lwidth / 3);
@@ -500,7 +500,39 @@ function addLegend(transformString) {
   newGroup.appendChild(elem);
 
   // Add labels to the Colour bar
-  // TODO
+  // Add upper label
+  var newText = document.createElementNS(svgNS,"text");
+  newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
+  newText.setAttributeNS(null,"y", offset + 3);
+  newText.setAttributeNS(null,"font-size","11");
+  var textNode = document.createTextNode("upper");
+  newText.appendChild(textNode);
+  newGroup.appendChild(newText);
+
+  // Add mid label
+  if (midValEnable) {
+    var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+    var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+    var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
+    var midOffset = ((lMidVal - lLowVal) / (lHighVal - lLowVal)) * (lheight - (2 * offset));
+
+    var newText = document.createElementNS(svgNS,"text");
+    newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
+    newText.setAttributeNS(null,"y", lheight - offset + 3 - midOffset);
+    newText.setAttributeNS(null,"font-size","11");
+    var textNode = document.createTextNode("mid");
+    newText.appendChild(textNode);
+    newGroup.appendChild(newText);
+  }
+
+  // Add lower label
+  var newText = document.createElementNS(svgNS,"text");
+  newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
+  newText.setAttributeNS(null,"y", lheight - offset + 3);
+  newText.setAttributeNS(null,"font-size","11");
+  var textNode = document.createTextNode("lower");
+  newText.appendChild(textNode);
+  newGroup.appendChild(newText);
 
   // Add newGroup to svg
   svg.appendChild(newGroup);
