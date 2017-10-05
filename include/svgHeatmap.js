@@ -24,8 +24,11 @@ var lowTransparent = false;
 var lastStrokeWidth = undefined;
 var lastStrokeColour = undefined;
 
+var startPos = undefined;
+var startTransform = undefined;
+
 function max(a, b) {
-   return (a > b) ? a : b;
+  return (a > b) ? a : b;
 }
 
 // In a string matching regex [0-9]+[^0-9]*, isolate the leading
@@ -36,7 +39,7 @@ function multString(orig, multiplicand) {
   var origVal;
   var i = 0;
   while (orig[i] >= '0' && orig[i] <= '9') {
-     ++i;
+    ++i;
   }
   origVal = orig.slice(0, i);
   origUnit = orig.slice(i);
@@ -262,8 +265,8 @@ function updateSvg() {
     var oldLegend = mySvgDoc.getElementById("legend");
     var transformString = undefined;
     if (oldLegend != undefined) {
-       transformString = oldLegend.getAttribute('transform');
-       oldLegend.parentNode.removeChild(oldLegend);
+      transformString = oldLegend.getAttribute('transform');
+      oldLegend.parentNode.removeChild(oldLegend);
     }
     addLegend(transformString);
   }
@@ -450,7 +453,10 @@ function addLegend(transformString) {
   var svgNS = svg.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
-  newGroup.addEventListener("drag", moveLegend);
+  newGroup.addEventListener("mousedown", moveLegendMouseDown);
+  newGroup.addEventListener("drag", moveLegendDrag);
+  newGroup.addEventListener("mouseup", moveLegendMouseUp);
+  // TODO: change cursor to drag cursor
 
   // Add the background
   var elem = document.createElementNS(svgNS,"rect");
@@ -499,28 +505,57 @@ function addLegend(transformString) {
   //elem.attr({fill:'url(#legendGrad)'});
   newGroup.appendChild(elem);
 
-  // Add labels to the Colour bar
+  addLabels(svgNS, lwidth, lheight, offset, newGroup);
+
+  // Add newGroup to svg
+  svg.appendChild(newGroup);
+}
+
+// Add labels to the legend's colour bar
+function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
+  var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+  var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+  var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
+
+  // Decide on printed precision
+  var range = lHighVal - lLowVal;
+  var precision = 2;
+  if (range > 10) {
+    precision = 0;
+  } else if (range > 1) {
+    precision = 1;
+  }
+
   // Add upper label
   var newText = document.createElementNS(svgNS,"text");
   newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
-  newText.setAttributeNS(null,"y", offset + 3);
+  newText.setAttributeNS(null,"y", offset + 4);
   newText.setAttributeNS(null,"font-size","11");
-  var textNode = document.createTextNode("upper");
+
+  var label=lHighVal.toFixed(precision);
+  if (units !== undefined) {
+    label += units;
+  }
+  var textNode = document.createTextNode(label);
+
   newText.appendChild(textNode);
   newGroup.appendChild(newText);
 
   // Add mid label
   if (midValEnable) {
-    var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
-    var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
-    var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
     var midOffset = ((lMidVal - lLowVal) / (lHighVal - lLowVal)) * (lheight - (2 * offset));
 
     var newText = document.createElementNS(svgNS,"text");
     newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
     newText.setAttributeNS(null,"y", lheight - offset + 3 - midOffset);
     newText.setAttributeNS(null,"font-size","11");
-    var textNode = document.createTextNode("mid");
+
+    var label=lMidVal.toFixed(precision);
+    if (units !== undefined) {
+      label += units;
+    }
+    var textNode = document.createTextNode(label);
+
     newText.appendChild(textNode);
     newGroup.appendChild(newText);
   }
@@ -528,14 +563,17 @@ function addLegend(transformString) {
   // Add lower label
   var newText = document.createElementNS(svgNS,"text");
   newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
-  newText.setAttributeNS(null,"y", lheight - offset + 3);
+  newText.setAttributeNS(null,"y", lheight - offset + 2);
   newText.setAttributeNS(null,"font-size","11");
-  var textNode = document.createTextNode("lower");
+
+  var label=lLowVal.toFixed(precision);
+  if (units !== undefined) {
+    label += units;
+  }
+  var textNode = document.createTextNode(label);
+
   newText.appendChild(textNode);
   newGroup.appendChild(newText);
-
-  // Add newGroup to svg
-  svg.appendChild(newGroup);
 }
 
 // Taken from https://stackoverflow.com/a/10898304/885587
@@ -591,8 +629,38 @@ function createLegendGradient(){
   return defs.appendChild(grad);
 }
 
-function moveLegend(evt) {
-   // TODO
+// Much of the inspiration for the following functions comes from
+// https://stackoverflow.com/a/10298843/885587, and
+// http://svg-whiz.com/svg/DragAndDrop.svg
+function moveLegendMouseDown(evt) {
+  // Set opacity
+  this.setAttribute('opacity', 0.5);
+
+  // Cache current svg-space position
+  startPos = svg.createSVGPoint();
+  startTransform = svg.createSVGPoint();
+  var newScale = SVGRoot.currentScale;
+  startPos.x = evt.clientX;
+  startPos.y = evt.clientY;
+  startPos.matrixTransform(svg.getScreenCTM().inverse());
+  var transformString = this.getAttribute('transform');
+  startTransform.x = 0; // TODO: get from transformString
+  startTransform.y = 0; // TODO: get from transformString
+}
+function moveLegendDrag(evt) {
+  var curPos = svg.createSVGPoint();
+  curPos.x = evt.clientX;
+  curPos.y = evt.clientY;
+  curPos.matrixTransform(svg.getScreenCTM().inverse());
+  var delta = curPos - lastPos;
+  curPos.x = startTransform.x + delta.x;
+  curPos.y = startTransform.y + delta.y;
+
+  this.setAttributeNS(null, 'transform', "translate(" + curPos.x + "," + curPos.y + ")");
+}
+function moveLegendMouseUp(evt) {
+  // Restore opacity
+  this.setAttribute('opacity', 1);
 }
 
 // Get the size (in svg-units) of svg image
