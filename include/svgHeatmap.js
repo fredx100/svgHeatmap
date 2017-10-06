@@ -8,7 +8,7 @@ var haveCSV = false;
 var haveSVG = false;
 var units = "%";
 var csvObj = undefined;
-var mySvgDoc = undefined;
+var svg = undefined;
 
 var highVal = undefined;
 var highColour = "#00FF00";
@@ -91,8 +91,8 @@ function handleSvgFileSelect(evt) {
 // signals that we have a valid SVG by setting the global haveSVG to
 // true.
 function registerSvg(evt) {
-  mySvgDoc = evt.target.contentDocument;
-  if (mySvgDoc !== null) {
+  svg = evt.target.contentDocument.getElementsByTagName('svg')[0];
+  if (svg !== null) {
     haveSVG = true;
   } else {
     haveSVG = false;
@@ -228,7 +228,7 @@ function setColour (elem, val) {
 function updateSVGByKey (element) {
   if (element.startsWith("KEY_")) {
     var keystring = element.substr(4); // get key string
-    var elem = mySvgDoc.getElementById(keystring);
+    var elem = svg.getElementById(keystring);
 
     if (elem !== null) {
       elem.addEventListener("mouseenter", highlight);
@@ -262,7 +262,7 @@ function updateSvg() {
     Object.keys(csvObj).forEach(updateSVGByKey);
 
     // Update the legend
-    var oldLegend = mySvgDoc.getElementById("legend");
+    var oldLegend = svg.getElementById("legend");
     var transformString = undefined;
     if (oldLegend != undefined) {
       transformString = oldLegend.getAttribute('transform');
@@ -449,18 +449,15 @@ function toggleMidValEnable(evt) {
 }
 
 function addLegend(transformString) {
-  var svg = mySvgDoc.getElementsByTagName('svg')[0];
   var svgNS = svg.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
   newGroup.addEventListener("mousedown", moveLegendMouseDown);
-  newGroup.addEventListener("drag", moveLegendDrag);
-  newGroup.addEventListener("mouseup", moveLegendMouseUp);
   // TODO: change cursor to drag cursor
 
   // Add the background
   var elem = document.createElementNS(svgNS,"rect");
-  var svgbbox = getSvgBb(mySvgDoc);
+  var svgbbox = getSvgBb();
   elem.setAttributeNS(null, 'x', 0);
   elem.setAttributeNS(null, 'y', 0);
   elem.setAttributeNS(null, 'width', (svgbbox.width / 7));
@@ -578,7 +575,6 @@ function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
 
 // Taken from https://stackoverflow.com/a/10898304/885587
 function createLegendGradient(){
-  var svg = mySvgDoc.getElementsByTagName('svg')[0];
   var svgNS = svg.namespaceURI;
   var grad  = document.createElementNS(svgNS,'linearGradient');
   grad.setAttribute('id','legendGrad');
@@ -633,39 +629,51 @@ function createLegendGradient(){
 // https://stackoverflow.com/a/10298843/885587, and
 // http://svg-whiz.com/svg/DragAndDrop.svg
 function moveLegendMouseDown(evt) {
+  // Set move and mouseup handlers
+  this.addEventListener("mousemove", moveLegendDrag);
+  this.addEventListener("mouseup", moveLegendMouseUp);
+  this.addEventListener("mouseleave", moveLegendMouseUp);
+
   // Set opacity
   this.setAttribute('opacity', 0.5);
 
   // Cache current svg-space position
   startPos = svg.createSVGPoint();
   startTransform = svg.createSVGPoint();
-  var newScale = SVGRoot.currentScale;
+  var newScale = svg.currentScale;
   startPos.x = evt.clientX;
   startPos.y = evt.clientY;
   startPos.matrixTransform(svg.getScreenCTM().inverse());
   var transformString = this.getAttribute('transform');
-  startTransform.x = 0; // TODO: get from transformString
-  startTransform.y = 0; // TODO: get from transformString
+  var transformArray = transformString.split(/[(,)]/);
+  startTransform.x = parseFloat(transformArray[1]);
+  startTransform.y = parseFloat(transformArray[2]);
 }
 function moveLegendDrag(evt) {
   var curPos = svg.createSVGPoint();
   curPos.x = evt.clientX;
   curPos.y = evt.clientY;
   curPos.matrixTransform(svg.getScreenCTM().inverse());
-  var delta = curPos - lastPos;
+  var delta = svg.createSVGPoint();
+  delta.x = curPos.x - startPos.x;
+  delta.y = curPos.y - startPos.y;
   curPos.x = startTransform.x + delta.x;
   curPos.y = startTransform.y + delta.y;
 
   this.setAttributeNS(null, 'transform', "translate(" + curPos.x + "," + curPos.y + ")");
 }
 function moveLegendMouseUp(evt) {
+  // Remove move and mouseup handlers
+  this.removeEventListener("mousemove", moveLegendDrag);
+  this.removeEventListener("mouseup", moveLegendMouseUp);
+  this.removeEventListener("mouseleave", moveLegendMouseUp);
+
   // Restore opacity
   this.setAttribute('opacity', 1);
 }
 
 // Get the size (in svg-units) of svg image
-function getSvgBb(svgContainer) {
-  var svg = svgContainer.getElementsByTagName('svg')[0];
+function getSvgBb() {
   var box = {x : undefined,
              y : undefined,
              width : undefined,
