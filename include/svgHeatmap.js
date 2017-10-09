@@ -6,7 +6,7 @@ var version = featureVersion + "." + bugfixVersion;
 
 var haveCSV = false;
 var haveSVG = false;
-var units = "%";
+var units = "";
 var csvObj = undefined;
 var svg = undefined;
 
@@ -695,6 +695,11 @@ function getSvgBb() {
   return box;
 }
 
+function setUnit(evt) {
+  units = evt.target.value;
+  updateSvg();
+}
+
 window.onload = function () {
   document.getElementById("csvfile").addEventListener("change", handleCsvFileSelect);
   document.getElementById("svgfile").addEventListener("change", handleSvgFileSelect);
@@ -717,5 +722,8 @@ window.onload = function () {
   document.getElementById("highValue").addEventListener("change", setRangeVal);
   document.getElementById("highTransparent").addEventListener("change", toggleColourTransparency);
   document.getElementById("highColour").addEventListener("change", changeColour);
+
+  // Unit options
+  document.getElementById("unit").addEventListener("change", setUnit);
 };
 
