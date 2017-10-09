@@ -1,7 +1,7 @@
 "use strict";
 
-var bugfixVersion = 9; // As any features necessary for first release missing are bugs.
-var featureVersion = 0; // As features necessary for first release missing.
+var bugfixVersion = 0;
+var featureVersion = 1;
 var version = featureVersion + "." + bugfixVersion;
 
 var haveCSV = false;
@@ -300,6 +300,9 @@ function saveToFile(elem) {
   var svgs = elem.contentDocument.getElementsByTagName("svg");
 
   if (svgs.length > 0) {
+    // Change drag cursor for legend
+    svgs[0].getElementById('legend').removeAttribute('style');
+
     // Create new link to SVG data
     var a      = document.createElement('a');
     a.href     = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgs[0].outerHTML)));
@@ -452,35 +455,30 @@ function addLegend(transformString) {
   var svgNS = svg.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
+  newGroup.style.cursor = "grab";
   newGroup.addEventListener("mousedown", moveLegendMouseDown);
-  // TODO: change cursor to drag cursor
+
+  // Get some measurements.
+  var svgbbox = getSvgBb();
+  var lwidth = (svgbbox.width / 7);   // default legend width
+  var lheight = (svgbbox.height / 3); // default legend height
+  var offset = lwidth / 10;
 
   // Add the background
   var elem = document.createElementNS(svgNS,"rect");
-  var svgbbox = getSvgBb();
+  elem.id = "legendBackground";
   elem.setAttributeNS(null, 'x', 0);
   elem.setAttributeNS(null, 'y', 0);
-  elem.setAttributeNS(null, 'width', (svgbbox.width / 7));
-  elem.setAttributeNS(null, 'height', (svgbbox.height / 3));
+  elem.setAttributeNS(null, 'width', lwidth / 3); // This width is set to ensure the group
+                                                  // width is defined by the text width
+                                                  // and is reset below.
+  elem.setAttributeNS(null, 'height', lheight);
   elem.setAttributeNS(null, 'rx', 3);
   elem.setAttributeNS(null, 'ry', 3);
   elem.style.fill = "#FFFFFF";
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
   newGroup.appendChild(elem);
-
-  var lwidth = elem.getAttribute('width');
-  var lheight = elem.getAttribute('height');
-  var offset = lwidth / 10;
-
-  // Offset newGroup
-  if (transformString !== undefined) {
-    newGroup.setAttributeNS(null, 'transform', transformString);
-  } else {
-    var gx = ((svgbbox.x + svgbbox.width) - lwidth - offset);
-    var gy = ((svgbbox.y + svgbbox.height) - lheight) / 2;
-    newGroup.setAttributeNS(null, 'transform', "translate(" + gx + "," + gy + ")");
-  }
 
   // Put a chequered pattern behind the colour bar to illustrate
   // transparency.
@@ -490,6 +488,7 @@ function addLegend(transformString) {
 
   // Add the Colour bar
   var elem = document.createElementNS(svgNS,"rect")
+  elem.id = "legendColourBar";
   elem.setAttributeNS(null, 'x', offset);
   elem.setAttributeNS(null, 'y', offset);
   elem.setAttributeNS(null, 'width', lwidth / 3);
@@ -499,13 +498,27 @@ function addLegend(transformString) {
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
   elem.style.fill = 'url(#legendGrad)';
-  //elem.attr({fill:'url(#legendGrad)'});
   newGroup.appendChild(elem);
 
+  // Add labels
   addLabels(svgNS, lwidth, lheight, offset, newGroup);
 
   // Add newGroup to svg
   svg.appendChild(newGroup);
+
+  // Add labels and change width of legend to wrap contents
+  elem = svg.getElementById("legendBackground");
+  var tightWidth = parseFloat(newGroup.getBBox().width) + offset;
+  elem.setAttributeNS(null, 'width', tightWidth);
+
+  // Offset newGroup
+  if (transformString !== undefined) {
+    newGroup.setAttributeNS(null, 'transform', transformString);
+  } else {
+    var gx = ((svgbbox.x + svgbbox.width) - tightWidth - offset);
+    var gy = ((svgbbox.y + svgbbox.height) - lheight) / 2;
+    newGroup.setAttributeNS(null, 'transform', "translate(" + gx + "," + gy + ")");
+  }
 }
 
 // Add labels to the legend's colour bar
@@ -637,6 +650,9 @@ function moveLegendMouseDown(evt) {
   // Set opacity
   this.setAttribute('opacity', 0.5);
 
+  // Set cursor
+  this.style.cursor = "grabbing";
+
   // Cache current svg-space position
   startPos = svg.createSVGPoint();
   startTransform = svg.createSVGPoint();
@@ -667,6 +683,9 @@ function moveLegendMouseUp(evt) {
   this.removeEventListener("mousemove", moveLegendDrag);
   this.removeEventListener("mouseup", moveLegendMouseUp);
   this.removeEventListener("mouseleave", moveLegendMouseUp);
+
+  // Set cursor
+  this.style.cursor = "grab";
 
   // Restore opacity
   this.setAttribute('opacity', 1);
