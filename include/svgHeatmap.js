@@ -7,7 +7,8 @@ var version = featureVersion + "." + bugfixVersion;
 var haveCSV = false;
 var haveSVG = false;
 var units = "%";
-var csvObj = undefined;
+var csvArray = undefined;
+var range = undefined;
 var svg = undefined;
 
 var highVal = undefined;
@@ -131,7 +132,7 @@ function checkRowValid(element, index) {
 }
 
 // Checks that the CSV data is applicable as heat map data.
-function checkValidData(csvArray) {
+function checkValidData() {
   var status = {valid:true};
 
   csvArray.forEach(checkRowValid, status);
@@ -139,37 +140,37 @@ function checkValidData(csvArray) {
   return status.valid;
 }
 
-// Convert an array row to an element
-function csvRowToElement(element) {
-  var elemFloat = parseFloat(element[1]);
-  csvObj["KEY_" + element[0]] = elemFloat;
-  if (elemFloat > csvObj.max) {
-    csvObj.max = elemFloat;
+// Convert string vals to floats and collate min/max value (per element)
+function prepCsvArrayElem(element) {
+  // Convert string to float
+  element[1] = parseFloat(element[1]);
+
+  if (element[1] > this.max) {
+    this.max = element[1];
   }
-  if (elemFloat < csvObj.min) {
-    csvObj.min = elemFloat;
+  if (element[1] < this.min) {
+    this.min = element[1];
   }
 }
 
-// Convert csvArray to a global object at csvObj
-function csvArrayToObject(csvArray) {
-  csvObj = {min:Infinity,max:-Infinity};
+// Convert string vals to floats and collate min/max value
+function prepCsvArray() {
+  range = {min:Infinity,max:-Infinity};
+  csvArray.forEach(prepCsvArrayElem, range);
 
-  csvArray.forEach(csvRowToElement);
-
-  // Set csvObj.rangeFactor. This is set such that
-  // rf * (csvObj.name - csvObj.min) is contained in [0.0,1.0]
-  csvObj.rangeFactor = 1.0 / (csvObj.max - csvObj.min);
+  // Set range.factor. This is set such that
+  // range.factor * (range.name - range.min) is contained in [0.0,1.0]
+  range.factor = 1.0 / (range.max - range.min);
 }
 
 // Return the colour ("#??????") resulting in interpolation between
 // highColour, midColour, and lowColour (don't forget transparencies!)
 function setColour (elem, val) {
   // Choose the relevant high and low values
-  var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+  var lHighVal = (highVal === undefined) ? range.max : highVal;
   var lHighColour = highColour;
   var lHighTransparent = highTransparent;
-  var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+  var lLowVal = (lowVal === undefined) ? range.min : lowVal;
   var lLowColour = lowColour;
   var lLowTransparent = lowTransparent;
   var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
@@ -223,43 +224,47 @@ function setColour (elem, val) {
 }
 
 
-// Using data from the global object csvObj, update the SVG element with
-// <name> given that element = "KEY_<name>".
-function updateSVGByKey (element) {
-  if (element.startsWith("KEY_")) {
-    var keystring = element.substr(4); // get key string
-    var elem = svg.getElementById(keystring);
+// Using data from the global object csvArray, update the SVG element with
+// id="id" given that element = [id, value, name].
+function updateSVGByElem (element) {
+  var elem = svg.getElementById(element[0]);
 
-    if (elem !== null) {
-      elem.addEventListener("mouseenter", highlight);
-      elem.addEventListener("mouseleave", lowlight);
-      setColour (elem, csvObj[element]);
+  if (elem !== null) {
+    elem.addEventListener("mouseenter", highlight);
+    elem.addEventListener("mouseleave", lowlight);
+    setColour (elem, element[1]);
 
-      // Add a "title" element.
-      var titleString = keystring + ": " + csvObj[element] + " " + units;
-      // Test if element already has a title child node.
-      var ti = elem.getElementsByTagName("title");
-      if (ti.length > 0) {
-        // Already have a title child node.
-        // There should be only one, so using index 0 should be safe.
-        ti[0].textContent = titleString;
-      } else {
-        // Need to create a title child node.
-        var newTitle = document.createElementNS("http://www.w3.org/2000/svg","title")
-        newTitle.textContent = titleString;
-        elem.appendChild(newTitle);
-      }
-
-    } else {
-      console.log("svgHeatmap: WARNING: KEY \"" + keystring + "\" not found in SVG.");
+    // Add a "title" element.
+    var titleString = element[0];
+    if (element[2] !== undefined) {
+       titleString = element[2];
     }
+    if (titleString[titleString.length - 1] != '\n') {
+      titleString += '\n';
+    }
+    titleString = titleString + element[1] + units;
+    // Test if element already has a title child node.
+    var ti = elem.getElementsByTagName("title");
+    if (ti.length > 0) {
+      // Already have a title child node.
+      // There should be only one, so using index 0 should be safe.
+      ti[0].textContent = titleString;
+    } else {
+      // Need to create a title child node.
+      var newTitle = document.createElementNS("http://www.w3.org/2000/svg","title")
+      newTitle.textContent = titleString;
+      elem.appendChild(newTitle);
+    }
+
+  } else {
+    console.log("svgHeatmap: WARNING: id \"" + element[0] + "\" not found in SVG.");
   }
 }
 
 // Given both SVG and CSV data, update the SVG regions.
 function updateSvg() {
   if (haveSVG && haveCSV) {
-    Object.keys(csvObj).forEach(updateSVGByKey);
+    csvArray.forEach(updateSVGByElem);
 
     // Update the legend
     var oldLegend = svg.getElementById("legend");
@@ -275,15 +280,15 @@ function updateSvg() {
 function getCsvObj(file) {
   var reader = new FileReader();
   reader.onload = function(){
-    var csvArray = readCSV(this.result);
+    csvArray = readCSV(this.result);
     if (checkValidData(csvArray)) {
-      csvArrayToObject(csvArray);
+      prepCsvArray(csvArray);
       haveCSV = true;
       updateSvg();
     } else {
       console.log("CSV validation failed.");
       haveCSV = false;
-      csvObj = null;
+      csvArray = null;
     }
   };
   reader.onerror = function(){ alert("Unable to read " + file.fileName); };
@@ -510,16 +515,16 @@ function addLegend(transformString) {
 
 // Add labels to the legend's colour bar
 function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
-  var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
-  var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
+  var lHighVal = (highVal === undefined) ? range.max : highVal;
+  var lLowVal = (lowVal === undefined) ? range.min : lowVal;
   var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
 
   // Decide on printed precision
-  var range = lHighVal - lLowVal;
+  var lrange = lHighVal - lLowVal;
   var precision = 2;
-  if (range > 10) {
+  if (lrange > 10) {
     precision = 0;
-  } else if (range > 1) {
+  } else if (lrange > 1) {
     precision = 1;
   }
 
@@ -596,8 +601,8 @@ function createLegendGradient(){
   // Mid
   if (midValEnable) {
      stop = document.createElementNS(svgNS,'stop');
-     var lLowVal = (lowVal === undefined) ? csvObj.min : lowVal;
-     var lHighVal = (highVal === undefined) ? csvObj.max : highVal;
+     var lLowVal = (lowVal === undefined) ? range.min : lowVal;
+     var lHighVal = (highVal === undefined) ? range.max : highVal;
      stop.setAttribute('offset', ((midVal === undefined) ? "50%"
                                                          : (((lHighVal - midVal) / (lHighVal - lLowVal)) * 100) + "%"));
      stop.setAttribute('stop-color', midColour);
