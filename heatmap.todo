@@ -22,15 +22,15 @@ Requirements {
         > logarithmic/linear/exp
         x other
             x This can allow scales which are misleading
-        ? limits?
+        v limits?
             > percentages
             > from 0, etc.
-    > Customisable colouring
+    v Customisable colouring
         > transparency
         > multi-step gradient
-    > key generation
-    > Tool can be used offline
-    > If output format is svg then do "proper" grouping to allow
+    v key generation
+    v Tool can be used offline
+    v If output format is svg then do "proper" grouping to allow
       post-creation editing.
 }
 Language {
@@ -63,9 +63,11 @@ Tasks {
             > Fuzzy match?
         > scale
             v limits
-            > log/linear/exp
-            > units
-    > Legend
+            > log
+            v linear
+            > exp
+            v units
+    v Legend
 }
 Bugs {
 }
