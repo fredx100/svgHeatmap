@@ -403,21 +403,21 @@ function toggleValAuto(evt) {
       lowVal = undefined;
     } else {
       numInput = document.getElementById("lowValue");
-      lowVal = numInput.value;
+      lowVal = parseFloat(numInput.value);
     }
   } else if (evt.target.id === "midValAuto") {
     if (evt.target.checked) {
       midVal = undefined;
     } else {
       numInput = document.getElementById("midValue");
-      midVal = numInput.value;
+      midVal = parseFloat(numInput.value);
     }
   } else { // high
     if (evt.target.checked) {
       highVal = undefined;
     } else {
       numInput = document.getElementById("highValue");
-      highVal = numInput.value;
+      highVal = parseFloat(numInput.value);
     }
   }
   updateSvg();
@@ -429,21 +429,21 @@ function setRangeVal(evt) {
   if (evt.target.id === "lowValue") {
     valEnabled = document.getElementById("lowValAuto");
     if (!valEnabled.checked) {
-      lowVal = evt.target.value;
+      lowVal = parseFloat(evt.target.value);
     } else {
       lowVal = undefined;
     }
   } else if (evt.target.id === "midValue") {
     valEnabled = document.getElementById("midValAuto");
     if (!valEnabled.checked) {
-      midVal = evt.target.value;
+      midVal = parseFloat(evt.target.value);
     } else {
       midVal = undefined;
     }
   } else { // high
     valEnabled = document.getElementById("highValAuto");
     if (!valEnabled.checked) {
-      highVal = evt.target.value;
+      highVal = parseFloat(evt.target.value);
     } else {
       highVal = undefined;
     }
