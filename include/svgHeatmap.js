@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 0;
+var bugfixVersion = 2;
 var featureVersion = 1;
 var version = featureVersion + "." + bugfixVersion;
 
