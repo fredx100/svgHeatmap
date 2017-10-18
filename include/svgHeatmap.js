@@ -93,7 +93,7 @@ function handleSvgFileSelect(evt) {
 // true.
 function registerSvg(evt) {
   svg = evt.target.contentDocument.getElementsByTagName('svg')[0];
-  if (svg !== null) {
+  if (svg !== undefined) {
     haveSVG = true;
   } else {
     haveSVG = false;
