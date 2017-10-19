@@ -1,9 +1,10 @@
-#!/usr/bin/gawk -f
+#!/usr/bin/awk -f
 
 # Converts data in "Multipolygon,name,code" csv format to svg.
+# The csv format must use ';' as a field separator.
 
 BEGIN {
-    FPAT = "([^,]*)|(\"[^\"]*\")";
+    FS = ";"
     print_svg_upfront_boilerplate();
 
     # The following dictates how shrunk the output is. A high scaling
