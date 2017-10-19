@@ -40,18 +40,16 @@ END {
         polygon = substr($1, startpos + 2, endpos - (startpos + 2));
         $1 = substr($1, endpos + 2, length($1) - (endpos + 1));
 
-        # Split out grouped polygons
+        # Mark boundary of grouped polygons
         #
-        # Sadly, all polygons are preserved, even though only one of the
-        # polygons is a solid (with the others holes) all are preserved
-        # here.
+        # This is then used in print_integers, below.
+        # Note: we use TWO markers, to preserve the parity of the index
+        #       with regards to x/y values.
         while ((endpos = index(polygon,"),(")) > 0) {
-            firstpolygon = substr(polygon, 1, endpos - 1);
-            polygon = substr(polygon, endpos + 3, length(polygon) - endpos - 3);
-            polygons[polyidx++] = firstpolygon;
+            polygon = substr(polygon, 1, endpos - 1) " X1 X2 " substr(polygon, endpos + 3, length(polygon) - endpos - 2);
         }
 
-        # Save the lone polygon
+        # Save the polygon
         polygons[polyidx++] = polygon;
     }
 
@@ -86,30 +84,38 @@ END {
 # separated, 10 to a line.
 function print_integers(splitpoly, indent, limits) {
     for (j in splitpoly) {
-        # Remove fractional part
-        splitpoly[j] = int(splitpoly[j]) / scaling;
+        if (splitpoly[j] == "X1") {
+            # Start of a new polygon
+            printf " z M"
+        } else if (splitpoly[j] != "X2") {
+            # Remove fractional part
+            splitpoly[j] = int(splitpoly[j]) / scaling;
 
-        # record limits
-        if ((j % 2) == 1) {
-            # Looking at x coord
-            if ((splitpoly[j]+0) < (limits["smallx"]+0))
-                limits["smallx"] = splitpoly[j];
-            if ((splitpoly[j]+0) > (limits["largex"]+0))
-                limits["largex"] = (splitpoly[j]+0);
-        } else {
-            # Looking at y coord
-            if (splitpoly[j] < limits["smally"])
-                limits["smally"] = splitpoly[j];
-            if (splitpoly[j] > limits["largey"])
-                limits["largey"] = splitpoly[j];
-        }
+            # Invert y and record limits
+            if ((j % 2) == 1) {
+                # Looking at x coord
+                if ((splitpoly[j]+0) < (limits["smallx"]+0))
+                    limits["smallx"] = splitpoly[j];
+                if ((splitpoly[j]+0) > (limits["largex"]+0))
+                    limits["largex"] = (splitpoly[j]+0);
+            } else {
+                # Invert y (svg has positive y-axis pointing downwards)
+                splitpoly[j] = -splitpoly[j];
 
-        # print
-        printf (" %s", splitpoly[j]);
+                # Looking at y coord
+                if (splitpoly[j] < limits["smally"])
+                    limits["smally"] = splitpoly[j];
+                if (splitpoly[j] > limits["largey"])
+                    limits["largey"] = splitpoly[j];
+            }
 
-        # line break after 10 values
-        if ((j != 0) && ((j + 1) in splitpoly) && ((j % 10) == 0)) {
-            printf "\n" indent;
+            # print
+            printf (" %s", splitpoly[j]);
+
+            # line break after 10 values
+            if ((j != 0) && ((j + 1) in splitpoly) && ((j % 10) == 0)) {
+                printf "\n" indent;
+            }
         }
     }
 }
@@ -124,5 +130,5 @@ function print_svg_upfront_boilerplate() {
     print "   xmlns=\"http://www.w3.org/2000/svg\""
     print "   version=\"1.1\""
     print "   id=\"svg\">"
-    print "  <g id=\"style-group\" style=\"fill:#00BB10;stroke:#000000;stroke-width:1px\">"
+    print "  <g id=\"style-group\" style=\"fill:#00BB10;fill-rule:evenodd;stroke:#000000;stroke-width:1px\">"
 }

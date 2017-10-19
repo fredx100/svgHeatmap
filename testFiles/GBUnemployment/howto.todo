@@ -1,0 +1,9 @@
+How to do it {
+   v Got OS boundary files
+   v Used QGIS to dump boundary files to csv
+      x couldn't use SVG export as it lost labels
+      > Used wkt format for geometry
+         > See https://en.wikipedia.org/wiki/Well-known_text
+   v Used awk script to convert csv to svg
+   v Used Inkscape to simplify the svg paths
+}
