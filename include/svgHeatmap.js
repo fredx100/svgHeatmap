@@ -11,6 +11,7 @@ var csvArray = undefined;
 var range = undefined;
 var svg = undefined;
 
+var legendDim = undefined;
 var highVal = undefined;
 var highColour = "#00FF00";
 var highTransparent = false;
@@ -50,7 +51,7 @@ function multString(orig, multiplicand) {
 
 // Increase a "stroke-width" string to the maximum of 3<units> or
 // current width.
-function increaseSWTo3(sw) {
+function increaseSWBy2(sw) {
   var swUnit;
   var swVal;
   var i = 0;
@@ -59,7 +60,7 @@ function increaseSWTo3(sw) {
   }
   swVal = sw.slice(0, i);
   swUnit = sw.slice(i);
-  swVal = max(swVal, 3);
+  swVal = swVal * 2;
   return swVal + swUnit;
 }
 
@@ -68,7 +69,7 @@ function highlight(e) {
   lastStrokeWidth = this.style["stroke-width"];
   lastStrokeColour = this.style.stroke;
 
-  this.style["stroke-width"] = increaseSWTo3(lastStrokeWidth);
+  this.style["stroke-width"] = multString(lastStrokeWidth, 2);
   this.style.stroke = "red";
 }
 
@@ -457,29 +458,31 @@ function toggleMidValEnable(evt) {
 }
 
 function addLegend(transformString) {
+  var svgbbox = getSvgBb();
+  if (legendDim == undefined) {
+    // Get some default measurements.
+    legendDim = { width : (svgbbox.width / 7),
+                  height : (svgbbox.height / 3),
+                  padding : (svgbbox.width / 70),
+                  fontSize : 11 };
+  }
   var svgNS = svg.namespaceURI;
   var newGroup  = document.createElementNS(svgNS,'g');
   newGroup.id = "legend";
   newGroup.style.cursor = "grab";
   newGroup.addEventListener("mousedown", moveLegendMouseDown);
 
-  // Get some measurements.
-  var svgbbox = getSvgBb();
-  var lwidth = (svgbbox.width / 7);   // default legend width
-  var lheight = (svgbbox.height / 3); // default legend height
-  var offset = lwidth / 10;
-
   // Add the background
   var elem = document.createElementNS(svgNS,"rect");
   elem.id = "legendBackground";
-  elem.setAttributeNS(null, 'x', 0);
-  elem.setAttributeNS(null, 'y', 0);
-  elem.setAttributeNS(null, 'width', lwidth / 3); // This width is set to ensure the group
+  elem.setAttribute('x', 0);
+  elem.setAttribute('y', 0);
+  elem.setAttribute('width', legendDim.width / 3); // This width is set to ensure the group
                                                   // width is defined by the text width
                                                   // and is reset below.
-  elem.setAttributeNS(null, 'height', lheight);
-  elem.setAttributeNS(null, 'rx', 3);
-  elem.setAttributeNS(null, 'ry', 3);
+  elem.setAttribute('height', legendDim.height);
+  elem.setAttribute('rx', 3);
+  elem.setAttribute('ry', 3);
   elem.style.fill = "#FFFFFF";
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
@@ -494,40 +497,43 @@ function addLegend(transformString) {
   // Add the Colour bar
   var elem = document.createElementNS(svgNS,"rect")
   elem.id = "legendColourBar";
-  elem.setAttributeNS(null, 'x', offset);
-  elem.setAttributeNS(null, 'y', offset);
-  elem.setAttributeNS(null, 'width', lwidth / 3);
-  elem.setAttributeNS(null, 'height', lheight - (2 * offset));
-  elem.setAttributeNS(null, 'rx', 3);
-  elem.setAttributeNS(null, 'ry', 3);
+  elem.setAttribute('x', legendDim.padding);
+  elem.setAttribute('y', legendDim.padding);
+  elem.setAttribute('width', legendDim.width / 3);
+  elem.setAttribute('height', legendDim.height - (2 * legendDim.padding));
+  elem.setAttribute('rx', 3);
+  elem.setAttribute('ry', 3);
   elem.style.stroke = "#000000";
   elem.style.strokeWidth = "1px";
   elem.style.fill = 'url(#legendGrad)';
   newGroup.appendChild(elem);
 
   // Add labels
-  addLabels(svgNS, lwidth, lheight, offset, newGroup);
+  addLabels(svgNS, newGroup);
 
   // Add newGroup to svg
   svg.appendChild(newGroup);
 
-  // Add labels and change width of legend to wrap contents
+  // Correct label positions
+  moveLabels();
+
+  // Change width of legend to wrap contents
   elem = svg.getElementById("legendBackground");
-  var tightWidth = parseFloat(newGroup.getBBox().width) + offset;
-  elem.setAttributeNS(null, 'width', tightWidth);
+  var tightWidth = parseFloat(newGroup.getBBox().width) + legendDim.padding;
+  elem.setAttribute('width', tightWidth);
 
   // Offset newGroup
   if (transformString !== undefined) {
-    newGroup.setAttributeNS(null, 'transform', transformString);
+    newGroup.setAttribute('transform', transformString);
   } else {
-    var gx = ((svgbbox.x + svgbbox.width) - tightWidth - offset);
-    var gy = ((svgbbox.y + svgbbox.height) - lheight) / 2;
-    newGroup.setAttributeNS(null, 'transform', "translate(" + gx + "," + gy + ")");
+    var gx = ((svgbbox.x + svgbbox.width) - tightWidth - legendDim.padding);
+    var gy = ((svgbbox.y + svgbbox.height) - legendDim.height) / 2;
+    newGroup.setAttribute('transform', "translate(" + gx + "," + gy + ")");
   }
 }
 
 // Add labels to the legend's colour bar
-function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
+function addLabels(svgNS, newGroup) {
   var lHighVal = (highVal === undefined) ? range.max : highVal;
   var lLowVal = (lowVal === undefined) ? range.min : lowVal;
   var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
@@ -541,13 +547,21 @@ function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
     precision = 1;
   }
 
+  // Find appropriate scaling
+  if (legendDim.textScale == undefined) {
+    var svgLongDim = max(svg.getBBox().width, svg.getBBox().height);
+    legendDim.textScale = svgLongDim / 800;
+  }
+
   // Add upper label
   var newText = document.createElementNS(svgNS,"text");
-  newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
-  newText.setAttributeNS(null,"y", offset + 4);
-  newText.setAttributeNS(null,"font-size","11");
+  newText.setAttribute("id", "highLabel");
+  newText.setAttribute("x", 0);
+  newText.setAttribute("y", 0);
+  newText.setAttribute("font-size",legendDim.fontSize);
+  newText.setAttribute("transform", "scale(" + legendDim.textScale + ")");
 
-  var label=lHighVal.toFixed(precision);
+  var label = lHighVal.toFixed(precision);
   if (units !== undefined) {
     label += units;
   }
@@ -558,14 +572,16 @@ function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
 
   // Add mid label
   if (midValEnable) {
-    var midOffset = ((lMidVal - lLowVal) / (lHighVal - lLowVal)) * (lheight - (2 * offset));
+    var midOffset = ((lMidVal - lLowVal) / (lHighVal - lLowVal)) * (legendDim.height - (2 * legendDim.padding));
 
     var newText = document.createElementNS(svgNS,"text");
-    newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
-    newText.setAttributeNS(null,"y", lheight - offset + 3 - midOffset);
-    newText.setAttributeNS(null,"font-size","11");
+    newText.setAttribute("id", "midLabel");
+    newText.setAttributeNS(null,"x", 0);
+    newText.setAttributeNS(null,"y", 0);
+    newText.setAttributeNS(null,"font-size",legendDim.fontSize);
+    newText.setAttribute("transform", "scale(" + legendDim.textScale + ")");
 
-    var label=lMidVal.toFixed(precision);
+    var label = lMidVal.toFixed(precision);
     if (units !== undefined) {
       label += units;
     }
@@ -577,11 +593,13 @@ function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
 
   // Add lower label
   var newText = document.createElementNS(svgNS,"text");
-  newText.setAttributeNS(null,"x", (lwidth / 3) + 2 * offset);
-  newText.setAttributeNS(null,"y", lheight - offset + 2);
-  newText.setAttributeNS(null,"font-size","11");
+  newText.setAttribute("id", "lowLabel");
+  newText.setAttributeNS(null,"x", 0);
+  newText.setAttributeNS(null,"y", 0);
+  newText.setAttributeNS(null,"font-size",legendDim.fontSize);
+  newText.setAttribute("transform", "scale(" + legendDim.textScale + ")");
 
-  var label=lLowVal.toFixed(precision);
+  var label = lLowVal.toFixed(precision);
   if (units !== undefined) {
     label += units;
   }
@@ -589,6 +607,27 @@ function addLabels(svgNS, lwidth, lheight, offset, newGroup) {
 
   newText.appendChild(textNode);
   newGroup.appendChild(newText);
+}
+
+// Move the (scaled) text to the appropriate position within the legend.
+// This is done after the legend has been added to the svg as otherwise
+// it's difficult to retreive the text's bbox.
+function moveLabels() {
+  var elem = svg.getElementById("highLabel");
+  var bbox = elem.getBBox();
+  var xDim = ((2 * legendDim.padding) + (legendDim.width / 3)) / legendDim.textScale;
+  elem.setAttribute("x", xDim);
+  elem.setAttribute("y", (legendDim.padding / legendDim.textScale) + (bbox.height / 3));
+
+  elem = svg.getElementById("midLabel");
+  if (elem != null) {
+    elem.setAttribute("x", xDim);
+    elem.setAttribute("y", ((legendDim.height / 2) / legendDim.textScale) + (bbox.height / 3));
+  }
+
+  elem = svg.getElementById("lowLabel");
+  elem.setAttribute("x", xDim);
+  elem.setAttribute("y", ((legendDim.height - legendDim.padding) / legendDim.textScale) + (bbox.height / 3));
 }
 
 // Taken from https://stackoverflow.com/a/10898304/885587
@@ -603,8 +642,9 @@ function createLegendGradient(){
   grad.setAttribute('x2', "0%");
   grad.setAttribute('y2', "100%");
 
-  // High - no, I don't know why the high colour must be at 0%, but it
-  // must.
+  // High - Recall that svg y-axis points downwards, so here, the 0%
+  // mark is at the top, rather than the bottom. Hence, "high value" is
+  // at 0% in the gradient.
   stop = document.createElementNS(svgNS,'stop');
   stop.setAttribute('offset', "0%");
   stop.setAttribute('stop-color', highColour);
@@ -680,7 +720,7 @@ function moveLegendDrag(evt) {
   curPos.x = startTransform.x + delta.x;
   curPos.y = startTransform.y + delta.y;
 
-  this.setAttributeNS(null, 'transform', "translate(" + curPos.x + "," + curPos.y + ")");
+  this.setAttribute('transform', "translate(" + curPos.x + "," + curPos.y + ")");
 }
 function moveLegendMouseUp(evt) {
   // Remove move and mouseup handlers
