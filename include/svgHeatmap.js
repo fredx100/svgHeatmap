@@ -661,10 +661,9 @@ function moveLegendMouseDown(evt) {
   // Cache current svg-space position
   startPos = svg.createSVGPoint();
   startTransform = svg.createSVGPoint();
-  var newScale = svg.currentScale;
   startPos.x = evt.clientX;
   startPos.y = evt.clientY;
-  startPos.matrixTransform(svg.getScreenCTM().inverse());
+  startPos = startPos.matrixTransform(svg.getScreenCTM().inverse());
   var transformString = this.getAttribute('transform');
   var transformArray = transformString.split(/[(,)]/);
   startTransform.x = parseFloat(transformArray[1]);
@@ -674,10 +673,10 @@ function moveLegendDrag(evt) {
   var curPos = svg.createSVGPoint();
   curPos.x = evt.clientX;
   curPos.y = evt.clientY;
-  curPos.matrixTransform(svg.getScreenCTM().inverse());
+  curPos = curPos.matrixTransform(svg.getScreenCTM().inverse());
   var delta = svg.createSVGPoint();
-  delta.x = curPos.x - startPos.x;
-  delta.y = curPos.y - startPos.y;
+  delta.x = (curPos.x - startPos.x);
+  delta.y = (curPos.y - startPos.y);
   curPos.x = startTransform.x + delta.x;
   curPos.y = startTransform.y + delta.y;
 
