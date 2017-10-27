@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 2;
+var bugfixVersion = 3;
 var featureVersion = 1;
 var version = featureVersion + "." + bugfixVersion;
 
@@ -40,7 +40,7 @@ function multString(orig, multiplicand) {
   var origUnit;
   var origVal;
   var i = 0;
-  while (orig[i] >= '0' && orig[i] <= '9') {
+  while ((orig[i] >= '0' && orig[i] <= '9') || (orig[i] == '.')) {
     ++i;
   }
   origVal = orig.slice(0, i);
@@ -69,14 +69,24 @@ function highlight(e) {
   lastStrokeWidth = this.style["stroke-width"];
   lastStrokeColour = this.style.stroke;
 
-  this.style["stroke-width"] = multString(lastStrokeWidth, 2);
+  var safeStrokeWidth = (lastStrokeWidth !== "") ? lastStrokeWidth
+                                                 : (1 * legendDim.textScale) + "px";
+  this.style["stroke-width"] = multString(safeStrokeWidth, 2);
   this.style.stroke = "red";
 }
 
 function lowlight(e) {
   // Restore the previous width/colour.
-  this.style["stroke-width"] = lastStrokeWidth;
-  this.style.stroke = lastStrokeColour;
+  if (lastStrokeWidth == "") {
+    this.style.removeProperty('stroke-width');
+  } else {
+    this.style["stroke-width"] = lastStrokeWidth;
+  }
+  if (lastStrokeColour == "") {
+    this.style.removeProperty('stroke');
+  } else {
+    this.style.stroke = lastStrokeColour;
+  }
 }
 
 // Pass selected SVG file to the displaying element.
@@ -572,8 +582,6 @@ function addLabels(svgNS, newGroup) {
 
   // Add mid label
   if (midValEnable) {
-    var midOffset = ((lMidVal - lLowVal) / (lHighVal - lLowVal)) * (legendDim.height - (2 * legendDim.padding));
-
     var newText = document.createElementNS(svgNS,"text");
     newText.setAttribute("id", "midLabel");
     newText.setAttributeNS(null,"x", 0);
@@ -621,8 +629,17 @@ function moveLabels() {
 
   elem = svg.getElementById("midLabel");
   if (elem != null) {
+    // The mid-labels position depends on what value it takes. Hence...
+    var lHighVal = (highVal === undefined) ? range.max : highVal;
+    var lLowVal = (lowVal === undefined) ? range.min : lowVal;
+    var lMidVal = (midVal === undefined) ? ((lHighVal - lLowVal) / 2) + lLowVal : midVal;
+    var midCoeff = ((lMidVal - lLowVal) / (lHighVal - lLowVal));
+    var colourBarHeight = (legendDim.height - (2 * legendDim.padding));
+    var midYBaseline = ((1 - midCoeff) * colourBarHeight) + legendDim.padding; // 1 - midCoeff as y axis negative.
+    var midY = (midYBaseline / legendDim.textScale) + (bbox.height / 3);
+
     elem.setAttribute("x", xDim);
-    elem.setAttribute("y", ((legendDim.height / 2) / legendDim.textScale) + (bbox.height / 3));
+    elem.setAttribute("y", midY);
   }
 
   elem = svg.getElementById("lowLabel");
