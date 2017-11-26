@@ -21,6 +21,10 @@ div.option {
     border: 1px solid grey;
     display: none;
 }
+#svgresult {
+    margin: auto;
+    overflow: auto;
+}
 input.range {
    max-width: 45px;
 }

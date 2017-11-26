@@ -68,6 +68,13 @@ Tasks {
             > exp
             v units
     v Legend
+    v change from reading as data to reading as text.
+        v Get to read svg
+        v Get to apply csv
+        v Make svg safe
+        v Get to scale svg appropriately.
+        v Make saveable
+
 }
 Bugs {
 }

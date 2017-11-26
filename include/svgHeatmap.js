@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 3;
+var bugfixVersion = 4;
 var featureVersion = 1;
 var version = featureVersion + "." + bugfixVersion;
 
@@ -94,16 +94,47 @@ function handleSvgFileSelect(evt) {
   var reader = new FileReader();
   reader.onload = function(readerEvent) {
     var elem = document.getElementById("svgresult");
-    elem.data = readerEvent.target.result;
+    var text = readerEvent.target.result;
+    var svgText = trimToSvg(text);
+    var safeSvgText = stripScripts(svgText);
+    elem.innerHTML = safeSvgText;
+
+    legendDim = undefined; // Reset legend size
+    document.getElementById("svgresult").style["height"] = "700px";
+    registerSvg();
   };
-  reader.readAsDataURL(evt.target.files[0]);
+  reader.readAsText(evt.target.files[0]);
+}
+
+// Trim to the first svg contained in the text.
+function trimToSvg(safeText) {
+  var startIndex = safeText.search(/<svg/i);
+  var endIndex = safeText.search(/<\/svg>/i) + 6;
+
+  return safeText.slice(startIndex, endIndex);
+}
+function stripScripts(safeText) {
+  // script tags
+  var temp = safeText;
+  var start = temp.search(/<script[^>]*>/i);
+  var end = temp.search(/<\/script>/i);
+  while ((start >= 0) && (end >= 0) && (start < end)) {
+    temp = ((start != 0) ? temp.slice(0, start) : "") + temp.slice(end + 9);
+    start = temp.search(/<script[^>]*>/i);
+    end = temp.search(/<\/script>/i);
+  }
+
+  // on* tags.
+  temp = temp.replace(/\bon[^=]+=("[^"]*"|'[^']*'|[^ >]*)/gi,"");
+
+  return temp;
 }
 
 // Listener for the element which displays the SVG. This globally
 // signals that we have a valid SVG by setting the global haveSVG to
 // true.
-function registerSvg(evt) {
-  svg = evt.target.contentDocument.getElementsByTagName('svg')[0];
+function registerSvg() {
+  svg = document.getElementsByTagName('svg')[0];
   if (svg !== undefined) {
     haveSVG = true;
   } else {
@@ -313,15 +344,14 @@ function handleCsvFileSelect(evt) {
 
 // save SVG
 function saveToFile(elem) {
-  var svgs = elem.contentDocument.getElementsByTagName("svg");
-
-  if (svgs.length > 0) {
+  if (svg != undefined) {
     // Change drag cursor for legend
-    svgs[0].getElementById('legend').removeAttribute('style');
+    svg.getElementById('legend').removeAttribute('style');
+    var elem = document.getElementById("svgresult");
 
     // Create new link to SVG data
     var a      = document.createElement('a');
-    a.href     = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgs[0].outerHTML)));
+    a.href     = 'data:image/svg+xml;base64,' + btoa(elem.innerHTML);
     a.download = 'heatmap.svg'; // TODO: use save dialog
     a.target   = '_blank';
 
@@ -783,7 +813,7 @@ function setUnit(evt) {
 window.onload = function () {
   document.getElementById("csvfile").addEventListener("change", handleCsvFileSelect);
   document.getElementById("svgfile").addEventListener("change", handleSvgFileSelect);
-  document.getElementById("svgresult").addEventListener("load", registerSvg);
+  document.getElementById("svgresult").addEventListener("change", registerSvg);
   document.getElementById("version").textContent = "Version " + version;
 
   // Colour options

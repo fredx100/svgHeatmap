@@ -1,3 +1,4 @@
+So this really shouldn't be here. I'll worry if people can just put in any script they want!
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -25,8 +26,14 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <script>
+    function superkill1000() { alert("Kill!"); }
+  </script>
   <g
      id="layer1">
+    <script>
+      function superkill1000() { alert("Kill!"); }
+    </scrIPT>
     <path
        id="A"
        d="M 259.91383,410.08626 374.27591,464.37937 434.34488,657.29319 563.72421,412.3966 497.87937,246.05176 633.03456,165.18968 486.32765,79.706907 422.79316,395.06902 Z"
@@ -37,10 +44,13 @@
     <path
        id="B"
        d="M 269.15521,125.91381 70.465526,272.62072 352.32763,346.55177 421.63799,447.05178 c 0,0 73.93104,-51.98276 73.93104,-56.60345 0,-4.62069 -226.41382,-264.53452 -226.41382,-264.53452 z"
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       onload="superkill1000()" />
     <path
        id="C"
        d="m 183.67244,570.65525 100.50001,102.81035 33.5,-177.89657 z"
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       ONhoVER='yo yo yo'
+       ONMOUSEOVER=superkill1000()/>
   </g>
 </svg>
