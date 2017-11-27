@@ -10,6 +10,7 @@ var units = "";
 var csvArray = undefined;
 var range = undefined;
 var svg = undefined;
+var xmlVersion = "";
 
 var legendDim = undefined;
 var highVal = undefined;
@@ -111,12 +112,20 @@ function trimToSvg(safeText) {
   var startIndex = safeText.search(/<svg/i);
   var endIndex = safeText.search(/<\/svg>/i) + 6;
 
+  // Preserve any xml version info immediately preceding the svg
+  var prefix = safeText.slice(0, startIndex);
+  var xmlVersionStart = prefix.search(/<\?xml[^>]*?>\s*$/i);
+  xmlVersion = "";
+  if (xmlVersionStart >= 0) {
+     xmlVersion = prefix.slice(xmlVersionStart);
+  }
   return safeText.slice(startIndex, endIndex);
 }
+
 function stripScripts(safeText) {
-  // script tags
-  var temp = safeText;
-  var start = temp.search(/<script[^>]*>/i);
+// script tags
+var temp = safeText;
+var start = temp.search(/<script[^>]*>/i);
   var end = temp.search(/<\/script>/i);
   while ((start >= 0) && (end >= 0) && (start < end)) {
     temp = ((start != 0) ? temp.slice(0, start) : "") + temp.slice(end + 9);
@@ -351,7 +360,7 @@ function saveToFile(elem) {
 
     // Create new link to SVG data
     var a      = document.createElement('a');
-    a.href     = 'data:image/svg+xml;base64,' + btoa(elem.innerHTML);
+    a.href     = 'data:image/svg+xml;base64,' + btoa(xmlVersion + elem.innerHTML);
     a.download = 'heatmap.svg'; // TODO: use save dialog
     a.target   = '_blank';
 

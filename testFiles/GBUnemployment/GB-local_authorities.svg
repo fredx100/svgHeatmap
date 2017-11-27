@@ -30,9 +30,7 @@
           </cc:Agent>
         </dc:creator>
         <dc:coverage>Great Britain</dc:coverage>
-        <dc:source>Contains Ordnance Survey 
-data © Crown copyright and database right 201
-7</dc:source>
+        <dc:source>Contains Ordnance Survey data (C) Crown copyright and database right 2017</dc:source>
       </cc:Work>
     </rdf:RDF>
   </metadata>
