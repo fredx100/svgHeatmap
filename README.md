@@ -41,9 +41,11 @@ LibreOffice Calc, is one example. Microsoft Excel would also work, at a
 pinch.
 
 The CSV file must have rows consisting of  
-\<region name\>, \<region value\>  
-pairs. Provided the Region name matches (case-sensitive) exactly with an
-id from the SVG the region value will be applied.
+\<region name\>, \<region value\>, [\<region title\>]  
+tuples. Provided the Region name matches (case-sensitive) exactly with an
+id from the SVG the region value will be applied. The third row entry is
+optional, but if present will be used in the region title (for
+tooltips).
 
 Empty rows and rows not in this format are ignored.
 
