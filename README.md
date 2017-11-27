@@ -49,7 +49,7 @@ Empty rows and rows not in this format are ignored.
 
 ## Known Limitations
 
-At the time of writing this, the project has only been successfully
-tested on the Firefox web browser (v54.0.1). Edge is known not to work
-and chrome/opera/any other you can think of is untested.
+At the time of writing this, the project has been successfully tested on
+the Firefox (v57) and Chrome (v62) web browsers. Edge is known not to
+work (saving the resultant heatmap fails). Other browsers are untested.
 
