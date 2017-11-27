@@ -752,9 +752,11 @@ function moveLegendMouseDown(evt) {
   startPos.y = evt.clientY;
   startPos = startPos.matrixTransform(svg.getScreenCTM().inverse());
   var transformString = this.getAttribute('transform');
-  var transformArray = transformString.split(/[(,)]/);
-  startTransform.x = parseFloat(transformArray[1]);
-  startTransform.y = parseFloat(transformArray[2]);
+  if (transformString != "") {
+    var transformArray = transformString.split(/[( ,)]/);
+    startTransform.x = parseFloat(transformArray[1]);
+    startTransform.y = parseFloat(transformArray[2]);
+  }
 }
 function moveLegendDrag(evt) {
   var curPos = svg.createSVGPoint();
