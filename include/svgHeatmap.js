@@ -762,7 +762,7 @@ function moveLegendMouseDown(evt) {
   startPos = startPos.matrixTransform(svg.getScreenCTM().inverse());
   var transformString = this.getAttribute('transform');
   if (transformString != "") {
-    var transformArray = transformString.split(/[( ,)]/);
+    var transformArray = transformString.split(/[( ,)]+/);
     startTransform.x = parseFloat(transformArray[1]);
     startTransform.y = parseFloat(transformArray[2]);
   }
