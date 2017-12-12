@@ -1,6 +1,6 @@
 "use strict";
 
-var bugfixVersion = 4;
+var bugfixVersion = 5;
 var featureVersion = 1;
 var version = featureVersion + "." + bugfixVersion;
 
@@ -29,6 +29,8 @@ var lastStrokeColour = undefined;
 
 var startPos = undefined;
 var startTransform = undefined;
+
+var titleCount = 1;
 
 function max(a, b) {
   return (a > b) ? a : b;
@@ -123,9 +125,9 @@ function trimToSvg(safeText) {
 }
 
 function stripScripts(safeText) {
-// script tags
-var temp = safeText;
-var start = temp.search(/<script[^>]*>/i);
+  // script tags
+  var temp = safeText;
+  var start = temp.search(/<script[^>]*>/i);
   var end = temp.search(/<\/script>/i);
   while ((start >= 0) && (end >= 0) && (start < end)) {
     temp = ((start != 0) ? temp.slice(0, start) : "") + temp.slice(end + 9);
@@ -134,7 +136,7 @@ var start = temp.search(/<script[^>]*>/i);
   }
 
   // on* tags.
-  temp = temp.replace(/\bon[^=]+=("[^"]*"|'[^']*'|[^ >]*)/gi,"");
+  temp = temp.replace(/\bon[a-zA-Z]+=("[^"]*"|'[^']*'|[^ >]*)/gi,"");
 
   return temp;
 }
@@ -303,6 +305,8 @@ function updateSVGByElem (element) {
     } else {
       // Need to create a title child node.
       var newTitle = document.createElementNS("http://www.w3.org/2000/svg","title")
+      newTitle.id = "t" + titleCount;
+      ++titleCount;
       newTitle.textContent = titleString;
       elem.appendChild(newTitle);
     }
